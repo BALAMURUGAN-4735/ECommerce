@@ -1,0 +1,293 @@
+<div class="ecommerce-layout">
+  <!-- 🧭 MAIN NAVBAR -->
+  <header class="main-navbar">
+    <div class="navbar-brand-section">
+      <div class="logo" (click)="resetAndNavigate('/')">🛒 MicroMarket</div>
+    </div>
+    
+    <nav class="quick-links">
+      <a (click)="resetAndNavigate('/')" [class.active]="activeSection === 'products'">Products</a>
+      <a (click)="resetAndNavigate('/favorites')" [class.active]="activeSection === 'favorites'">
+        ❤️ Favorites ({{ storage.favorites.length }})
+      </a>
+      <a (click)="resetAndNavigate('/cart')" [class.active]="activeSection === 'cart'">
+        🛒 Cart ({{ storage.cart.length }})
+      </a>
+      <a (click)="resetAndNavigate('/tracking')" [class.active]="activeSection === 'orders'">Track Order</a>
+    </nav>
+    
+    <!-- 🟢 AUTH ACTION ZONE -->
+    <div class="auth-action-zone">
+      <ng-container *ngIf="!currentTabUser; else loggedInUserBlock">
+        <button class="btn-login" routerLink="/login">Sign In</button>
+      </ng-container>
+
+      <ng-template #loggedInUserBlock>
+        <div class="profile-container" *ngIf="currentTabUser">
+          <button class="btn-profile" (click)="toggleProfile()">
+            👤 Hello, {{ currentTabUser.name || 'User' }}
+          </button>
+
+          <div *ngIf="showProfileMenu" class="profile-dropdown-card">
+            <p class="user-email"><strong>Email:</strong> {{ currentTabUser.email }}</p>
+            <p class="user-role"><strong>Account Role:</strong> {{ currentTabUser.role | uppercase }}</p>
+            
+            <button *ngIf="currentTabUser.role === 'admin'" 
+                    class="btn btn-sm btn-warning w-100 fw-bold my-2" 
+                    (click)="goToAdminPanel()">
+              ⚡ Go to Admin Panel
+            </button>
+
+            <hr />
+            <button class="btn-logout" (click)="onLogout()">Logout</button>
+          </div>
+        </div>
+      </ng-template>
+    </div>
+  </header>
+
+  <main class="content-body">
+    <!-- 🔒 ADMIN MODE BANNER -->
+    <section *ngIf="currentTabUser && currentTabUser.role === 'admin'" class="admin-warning-banner">
+      <div class="banner-box d-flex justify-content-between align-items-center p-3 bg-dark text-white rounded mb-3">
+        <h4 class="m-0">🔒 Administrative Mode Session Active</h4>
+        <button class="btn btn-warning fw-bold" (click)="goToAdminPanel()">Open Admin Console ➔</button>
+      </div>
+    </section>
+
+    <!-- 📦 USER PERSONAL DASHBOARD SECTION -->
+    <section *ngIf="currentTabUser && currentTabUser.role === 'user'" class="personal-dashboard">
+      <div class="dashboard-banner">
+        <h3>Welcome Back, {{ currentTabUser.name }}!</h3>
+      </div>
+    </section>
+
+    <!-- 🖼️ 5-IMAGE PROMO CAROUSEL SLIDER -->
+    <section class="promo-carousel-container">
+      <div class="carousel-slide" [style.background-color]="promoBanners[currentSlide].bgColor">
+        <div class="slide-content">
+          <span class="badge-promo">EXCLUSIVE OFFER</span>
+          <h2>{{ promoBanners[currentSlide].title }}</h2>
+          <p>{{ promoBanners[currentSlide].subtitle }}</p>
+          <button class="btn-carousel-action">{{ promoBanners[currentSlide].ctaText }}</button>
+        </div>
+        <div class="slide-icon">{{ promoBanners[currentSlide].icon }}</div>
+      </div>
+      
+      <button class="carousel-btn prev-btn" (click)="prevSlide()">❮</button>
+      <button class="carousel-btn next-btn" (click)="nextSlide()">❯</button>
+
+      <div class="carousel-dots">
+        <span *ngFor="let banner of promoBanners; let i = index" 
+              class="dot" 
+              [class.active-dot]="i === currentSlide"
+              (click)="goToSlide(i)">
+        </span>
+      </div>
+    </section>
+
+    <!-- 🔍 CATEGORY & SEARCH FILTER SECTION -->
+    <section class="filter-controls-section my-4">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div class="search-box flex-grow-1" style="max-width: 350px;">
+          <input 
+            type="text" 
+            class="form-control" 
+            placeholder="🔎 Search products by name..." 
+            [(ngModel)]="searchQuery" 
+            (ngModelChange)="applyCatalogFilters()" 
+          />
+        </div>
+
+        <div class="category-pills-row d-flex flex-wrap gap-2">
+          <button 
+            *ngFor="let cat of categoryList" 
+            class="btn-cat-pill" 
+            [class.active-pill]="selectedCategory === cat.id"
+            (click)="selectCategory(cat.id)">
+            {{ cat.icon }} {{ cat.name }}
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 🛍️ CATALOG SHOWCASE SECTION -->
+    <section class="catalog-showcase">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="section-title m-0">Trending Products & Services</h3>
+        <span class="text-muted fw-bold">Showing {{ filteredProducts.length }} Products</span>
+      </div>
+
+      <div *ngIf="filteredProducts.length === 0" class="no-data">
+        <h5>No products found matching your search criteria.</h5>
+        <p class="m-0">Try changing your category or clearing search terms!</p>
+      </div>
+
+      <div class="products-grid" *ngIf="filteredProducts.length > 0">
+        <div *ngFor="let prod of filteredProducts" class="product-item-card">
+          <button class="btn-favorite-heart" (click)="storage.toggleFavorite(prod)">
+            {{ storage.isFavorite(prod) ? '❤️' : '🖤' }}
+          </button>
+          
+          <div class="product-image-placeholder">{{ prod.icon || '📦' }}</div>
+          
+          <div class="product-info">
+            <span class="category-tag">{{ prod.category | uppercase }}</span>
+            <h4>{{ prod.name }}</h4>
+            <p class="description">{{ prod.description }}</p>
+            
+            <div class="footer-row">
+              <span class="price">${{ prod.price }}</span>
+              <div class="action-buttons-group">
+                <button class="btn-cart" (click)="storage.addToCart(prod)">🛒 Add to Cart</button>
+                <button class="btn-buy" (click)="openCheckoutWizard(prod)">Direct Buy</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- 🛒 ATTRACTIVE 3-STEP CHECKOUT WIZARD MODAL -->
+<div class="modal-overlay" *ngIf="showCheckoutModal">
+  <div class="modal-content-card wizard-card">
+    <div class="wizard-header d-flex justify-content-between align-items-center">
+      <h4 class="m-0">Checkout Wizard — Step {{ checkoutStep }} of 3</h4>
+      <button class="btn-close-x" (click)="closeCheckoutWizard()">✖</button>
+    </div>
+
+    <!-- STEP 1: ITEM REVIEW -->
+    <div *ngIf="checkoutStep === 1" class="wizard-step-body">
+      <h5 class="mb-3">Step 1: Order Items Summary</h5>
+      <div class="summary-box p-3 border rounded">
+        
+        <!-- 🟢 RIGHT-ALIGNED PRODUCT LOGO LAYOUT -->
+        <div *ngFor="let item of checkoutItems; let i = index" class="checkout-item-row p-3 border rounded mb-2 bg-light">
+          <div class="d-flex justify-content-between align-items-center">
+            
+            <!-- Left Side: Item Text Details & Quantity Controls -->
+            <div>
+              <h6 class="fw-bold m-0 text-dark">Item: {{ item.name }}</h6>
+              <small class="text-muted">Unit Price: ${{ item.price }}</small>
+              
+              <div class="quantity-row d-flex align-items-center gap-2 mt-2">
+                <label class="small fw-bold m-0">Qty:</label>
+                <input type="number" class="input-qty form-control form-control-sm" style="width: 70px;" [(ngModel)]="item.quantity" (ngModelChange)="recalculateTotal()" min="1" />
+                <button *ngIf="checkoutItems.length > 1" class="btn btn-sm btn-outline-danger" (click)="removeCheckoutItem(i)">🗑️</button>
+              </div>
+            </div>
+
+            <!-- Right Side: Product Logo / Emoji Icon -->
+            <div class="text-center px-3">
+              <span class="fs-1" style="line-height: 1;">{{ item.icon || '📦' }}</span>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="add-more-zone mt-3">
+          <label class="fw-bold">➕ Add More Items To This Order:</label>
+          <div class="d-flex gap-2 mt-1">
+            <select class="form-select" [(ngModel)]="selectedAddOnProduct">
+              <option [ngValue]="null">-- Select Product --</option>
+              <option *ngFor="let p of products" [ngValue]="p">{{ p.name }} (${{ p.price }})</option>
+            </select>
+            <button class="btn-secondary-sm" (click)="addSelectedAddOn()">Add</button>
+          </div>
+        </div>
+
+        <div class="mt-3 p-2 bg-light border rounded d-flex justify-content-between align-items-center">
+          <span class="text-muted small">Want to shop more later?</span>
+          <button type="button" class="btn btn-sm btn-outline-primary" (click)="moveToCartAndKeepShopping()">
+            🛒 Move Items to Cart & Continue Shopping
+          </button>
+        </div>
+
+        <hr />
+        <h4 class="total-price-text text-end text-success">Calculated Total: ${{ calculatedTotalBill.toFixed(2) }}</h4>
+      </div>
+    </div>
+
+    <!-- STEP 2: SHIPPING DETAILS -->
+    <div *ngIf="checkoutStep === 2" class="wizard-step-body">
+      <h5 class="mb-3">Step 2: Shipping & Delivery Address</h5>
+      
+      <div class="row g-2 mb-2">
+        <div class="col-md-6">
+          <label class="form-label fw-bold">Recipient Name <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" [(ngModel)]="shippingForm.name" placeholder="Full Name" />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-bold">Phone Number <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" [(ngModel)]="shippingForm.phone" placeholder="10-digit mobile number" />
+        </div>
+      </div>
+
+      <div class="row g-2 mb-2">
+        <div class="col-md-6">
+          <label class="form-label fw-bold">Pincode <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" [(ngModel)]="shippingForm.pincode" placeholder="e.g. 600001" />
+        </div>
+        <div class="col-md-6 d-flex align-items-end">
+          <button type="button" class="btn btn-outline-primary w-100" (click)="detectLocation()">
+            📍 Auto-Detect Current Location
+          </button>
+        </div>
+      </div>
+
+      <div class="mb-2">
+        <label class="form-label fw-bold">Flat, House No., Building, Street <span class="text-danger">*</span></label>
+        <input type="text" class="form-control" [(ngModel)]="shippingForm.address" placeholder="Door No, Street Name, Area" />
+      </div>
+
+      <div class="mb-2">
+        <label class="form-label fw-bold">Landmark</label>
+        <input type="text" class="form-control" [(ngModel)]="shippingForm.landmark" placeholder="Near bus stop, temple, school etc." />
+      </div>
+
+      <div class="row g-2 mb-2">
+        <div class="col-md-6">
+          <label class="form-label fw-bold">District <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" [(ngModel)]="shippingForm.district" placeholder="e.g. Chennai" />
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-bold">State <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" [(ngModel)]="shippingForm.state" placeholder="e.g. Tamil Nadu" />
+        </div>
+      </div>
+
+      <div class="mb-2" *ngIf="userSavedAddresses.length > 0">
+        <label class="form-label fw-bold">Or Choose Saved Address</label>
+        <select class="form-select" (change)="onSelectSavedAddress($event)">
+          <option value="">-- Choose From Saved Addresses --</option>
+          <option *ngFor="let addr of userSavedAddresses" [value]="addr">{{ addr }}</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- STEP 3: PAYMENT METHOD -->
+    <div *ngIf="checkoutStep === 3" class="wizard-step-body">
+      <h5 class="mb-3">Step 3: Payment Method Selection</h5>
+      <div class="payment-options d-flex flex-column gap-2 mt-2">
+        <label class="border p-2 rounded cursor-pointer">
+          <input type="radio" name="pay" value="CARD" [(ngModel)]="paymentMethod" /> Credit / Debit Card
+        </label>
+        <label class="border p-2 rounded cursor-pointer">
+          <input type="radio" name="pay" value="UPI" [(ngModel)]="paymentMethod" /> UPI / Google Pay / PhonePe
+        </label>
+        <label class="border p-2 rounded cursor-pointer">
+          <input type="radio" name="pay" value="COD" [(ngModel)]="paymentMethod" /> Cash on Delivery (COD)
+        </label>
+      </div>
+    </div>
+
+    <!-- MODAL ACTIONS -->
+    <div class="modal-actions-row wizard-actions mt-4 d-flex justify-content-end gap-2">
+      <button class="btn-modal-close btn btn-secondary" *ngIf="checkoutStep > 1" (click)="checkoutStep = checkoutStep - 1">Back</button>
+      <button class="btn-buy btn btn-primary" *ngIf="checkoutStep < 3" (click)="goToNextCheckoutStep()">Next Step ➔</button>
+      <button class="btn-modal-submit btn btn-success" *ngIf="checkoutStep === 3" (click)="confirmAndPay()">Confirm & Place Order</button>
+    </div>
+  </div>
+</div>

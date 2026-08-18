@@ -1,0 +1,98 @@
+<div class="ecommerce-layout">
+  <header class="main-navbar">
+    <div class="navbar-brand-section">
+      <div class="logo" routerLink="/">🛒 MicroMarket</div>
+    </div>
+    
+    <nav class="quick-links">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Products</a>
+      <a routerLink="/favorites" routerLinkActive="active">❤️ Favorites ({{ storage.favorites.length }})</a>
+      <a routerLink="/cart" routerLinkActive="active">🛒 Cart ({{ storage.cart.length }})</a>
+      <a routerLink="/tracking" routerLinkActive="active">Track Order</a>
+    </nav>
+
+    <div class="auth-action-zone" *ngIf="currentTabUser">
+      <span class="user-greeting">👤 {{ currentTabUser.name }}</span>
+    </div>
+  </header>
+
+  <main class="content-body">
+    <!-- PENDING CHECKOUT RESUME BANNER -->
+    <div *ngIf="storage.pendingCheckout" class="alert alert-warning d-flex justify-content-between align-items-center mb-4 p-3 rounded shadow-sm border-warning">
+      <div>
+        <h5 class="m-0 text-dark">⚠️ You have an uncompleted order session in progress!</h5>
+        <small class="text-muted">Total Bill: ${{ storage.pendingCheckout.totalBill?.toFixed(2) }} (Saved at Step {{ storage.pendingCheckout.step }})</small>
+      </div>
+      <div class="d-flex gap-2">
+        <button class="btn btn-warning fw-bold" (click)="resumePendingOrder()">
+          ▶️ Resume Order
+        </button>
+        <button class="btn btn-outline-danger btn-sm" (click)="cancelPendingDraft()">
+          ✖ Dismiss
+        </button>
+      </div>
+    </div>
+
+    <h2 class="section-title">🛒 Your Selected Shopping Cart</h2>
+
+    <!-- Empty State -->
+    <div *ngIf="(!storage.cart || storage.cart.length === 0) && !storage.pendingCheckout" class="no-data">
+      <h5>Your shopping cart is completely empty.</h5>
+      <p class="mb-3">Explore our catalog and add your favorite items to your cart!</p>
+      <button routerLink="/" class="btn-checkout-bulk" style="width: auto; margin: 0 auto; padding: 8px 24px;">
+        Go Shopping
+      </button>
+    </div>
+
+    <!-- Populated Cart Layout -->
+    <div *ngIf="storage.cart && storage.cart.length > 0" class="cart-layout-grid">
+      
+      <div class="cart-items-column">
+        <div *ngFor="let item of storage.cart" class="cart-box-card">
+          <div class="box-image-placeholder">
+            {{ item.icon || '📦' }}
+          </div>
+
+          <div class="box-details">
+            <span class="category-badge" *ngIf="item.category">{{ item.category | uppercase }}</span>
+            <h5 class="item-name">{{ item.name || item.productName }}</h5>
+            <p class="item-desc">{{ item.description || 'No description available' }}</p>
+            <p class="item-price">Unit Price: <strong>${{ (item.price || item.productPrice || 0) | number:'1.2-2' }}</strong></p>
+            
+            <div class="box-actions">
+              <div class="quantity-box">
+                <span class="qty-label">Qty:</span>
+                <input type="number" 
+                       [(ngModel)]="item.quantity" 
+                       (ngModelChange)="onQuantityChange(item.productId || item.id, item.quantity)"
+                       min="1" 
+                       class="qty-input" />
+              </div>
+
+              <button class="btn-remove" (click)="onRemove(item.productId || item.id)">
+                🗑️ Remove
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Summary Matrix Sidebar -->
+      <div class="cart-summary-column">
+        <div class="summary-card">
+          <h4 class="summary-title">Summary Matrix</h4>
+          <hr />
+          <div class="summary-row">
+            <span>Subtotal:</span>
+            <strong class="total-amount">${{ totalCartPrice | number:'1.2-2' }}</strong>
+          </div>
+          <button class="btn-checkout-bulk" (click)="openBulkCheckoutWizard()">
+            Proceed to Checkout
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>

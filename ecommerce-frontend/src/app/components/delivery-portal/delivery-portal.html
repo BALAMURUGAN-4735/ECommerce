@@ -1,0 +1,187 @@
+<div class="delivery-layout">
+  <header class="delivery-navbar px-4 py-3 bg-dark text-white d-flex justify-content-between align-items-center shadow-sm">
+    <div class="d-flex align-items-center gap-3">
+      <h3 class="m-0 fw-bold">🚚 MicroMarket Logistics Console</h3>
+      <span class="badge bg-primary text-uppercase">Partner Tier: Express Fleet</span>
+    </div>
+    <div class="d-flex align-items-center gap-3" *ngIf="currentPartner">
+      <span>👤 Logged Partner: <strong>{{ currentPartner.name }}</strong></span>
+      <button class="btn btn-outline-light btn-sm fw-bold" (click)="logoutPartner()">🚪 Logout</button>
+    </div>
+  </header>
+
+  <main class="container-fluid py-4 px-4 bg-light min-vh-100">
+    <!-- 📊 TOP METRIC SUMMARY CARDS -->
+    <div class="row g-3 mb-4">
+      <!-- Total Assigned -->
+      <div class="col-md-3">
+        <div class="card border-0 shadow-sm p-3">
+          <small class="text-uppercase text-muted fw-bold">Total Assigned</small>
+          <h2 class="fw-bold m-0 text-primary">{{ assignedOrdersCount }}</h2>
+        </div>
+      </div>
+
+      <!-- Active / Remaining -->
+      <div class="col-md-3">
+        <div class="card border-0 shadow-sm p-3 border-start border-4 border-info">
+          <small class="text-uppercase text-muted fw-bold">Active / Remaining</small>
+          <h2 class="fw-bold m-0 text-info">{{ activePackagesCount }}</h2>
+        </div>
+      </div>
+
+      <!-- Delivered -->
+      <div class="col-md-3">
+        <div class="card border-0 shadow-sm p-3 border-start border-4 border-success">
+          <small class="text-uppercase text-muted fw-bold">Delivered</small>
+          <h2 class="fw-bold m-0 text-success">{{ deliveredOrdersCount }}</h2>
+        </div>
+      </div>
+
+      <!-- Cancelled / RTO -->
+      <div class="col-md-3">
+        <div class="card border-0 shadow-sm p-3 border-start border-4 border-danger">
+          <small class="text-uppercase text-muted fw-bold">Cancelled / RTO</small>
+          <h2 class="fw-bold m-0 text-danger">{{ canceledOrdersCount }}</h2>
+        </div>
+      </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2 border-bottom pb-3">
+      <div class="btn-group" role="group">
+        <button type="button" class="btn fw-bold px-4" [ngClass]="activeTab === 'assigned' ? 'btn-primary' : 'btn-outline-secondary'" (click)="setActiveTab('assigned')">📦 Assigned Orders ({{ assignedOrdersCount }})</button>
+        <button type="button" class="btn fw-bold px-4" [ngClass]="activeTab === 'delivered' ? 'btn-success' : 'btn-outline-secondary'" (click)="setActiveTab('delivered')">✅ Delivered Orders ({{ deliveredOrdersCount }})</button>
+        <button type="button" class="btn fw-bold px-4" [ngClass]="activeTab === 'canceled' ? 'btn-danger' : 'btn-outline-secondary'" (click)="setActiveTab('canceled')">❌ Canceled / RTO ({{ canceledOrdersCount }})</button>
+      </div>
+      <button class="btn btn-outline-primary fw-bold" (click)="loadAssignedDeliveries()">🔄 Sync Routes</button>
+    </div>
+
+    <div *ngIf="filteredOrders.length === 0" class="card border-0 shadow-sm text-center p-5 bg-white">
+      <div class="card-body">
+        <h5>📭 No orders found for "{{ currentPartner?.name || 'In-House Delivery Agent' }}".</h5>
+      </div>
+    </div>
+
+    <div class="row g-4" *ngIf="filteredOrders.length > 0">
+      <div class="col-md-6 col-lg-4" *ngFor="let order of filteredOrders">
+        <div class="card border-0 shadow-sm h-100 route-card bg-white">
+          <div class="card-header bg-white d-flex justify-content-between align-items-center pt-3 border-0">
+            <span class="fw-bold fs-5 text-primary">#{{ order.orderId }}</span>
+            <span class="badge text-uppercase p-2" [ngClass]="{
+              'bg-warning text-dark': order.status === 'PACKING',
+              'bg-info text-dark': order.status === 'DISPATCHED',
+              'bg-primary': order.status === 'OUT_FOR_DELIVERY',
+              'bg-secondary': order.status === 'WAITING_FOR_DELIVERY',
+              'bg-success': order.status === 'DELIVERED',
+              'bg-danger': order.status === 'CANCELLED' || order.status === 'RTO'
+            }">{{ order.status }}</span>
+          </div>
+
+          <div class="card-body">
+            <p class="mb-2">👤 <strong>Recipient:</strong> {{ order.recipientName || 'Valued Customer' }}</p>
+            <p class="mb-2">📞 <strong>Phone:</strong> <a href="tel:{{order.recipientPhone}}" class="fw-bold text-decoration-none btn btn-sm btn-outline-success py-0 px-2 ms-1">📞 {{ order.recipientPhone || 'N/A' }}</a></p>
+            <p class="mb-2">📍 <strong>Address:</strong> {{ order.shippingAddress || 'N/A' }}</p>
+            <p class="mb-3">
+              📍 <strong>Delivery Attempts:</strong> 
+              <span class="badge ms-1" [ngClass]="order.deliveryAttempts >= 2 ? 'bg-danger' : 'bg-dark'">{{ order.deliveryAttempts || 0 }} / 3 Attempts</span>
+            </p>
+
+            <div class="bg-light p-2 rounded mb-3 d-flex justify-content-between align-items-center">
+              <span class="text-muted small fw-bold">Package Bill:</span>
+              <span class="text-success fw-bold fs-5">${{ order.totalBill | number:'1.2-2' }}</span>
+            </div>
+
+            <div *ngIf="order.cancelReason" class="alert alert-warning p-2 small mb-3">
+              ⚠️ <strong>Log Note:</strong> {{ order.cancelReason }}
+            </div>
+
+            <div class="d-flex flex-column gap-2" *ngIf="activeTab === 'assigned'">
+              <div class="btn-group w-100" role="group">
+                <button *ngIf="order.status === 'PACKING'" class="btn btn-outline-info fw-bold btn-sm" (click)="updateOrderStatus(order.orderId, 'DISPATCHED')">🚀 Mark Dispatched</button>
+                <button *ngIf="order.status === 'DISPATCHED' || order.status === 'WAITING_FOR_DELIVERY'" class="btn btn-outline-primary fw-bold btn-sm" (click)="updateOrderStatus(order.orderId, 'OUT_FOR_DELIVERY')">🛵 Out for Delivery</button>
+                <button *ngIf="order.status === 'OUT_FOR_DELIVERY'" class="btn btn-success fw-bold btn-sm" (click)="openOtpModal(order)">🔑 Confirm Delivery (Enter OTP)</button>
+              </div>
+
+              <div class="d-flex gap-2">
+                <button *ngIf="order.status === 'OUT_FOR_DELIVERY'" class="btn btn-outline-warning btn-sm fw-bold flex-grow-1" (click)="openAttemptModal(order)">⏳ Unreachable / Attempt</button>
+                <button class="btn btn-outline-danger btn-sm fw-bold flex-grow-1" (click)="openCancelModal(order.orderId)">⚠️ Field Issue</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- OTP Verification Modal -->
+<div class="modal-overlay" *ngIf="showOtpModal" (click)="closeOtpModal()">
+  <div class="modal-content-card p-4 shadow bg-white rounded" style="max-width: 450px; width: 100%;" (click)="$event.stopPropagation()">
+    <h4 class="fw-bold text-success mb-2">🔑 Verify Customer Delivery OTP</h4>
+    <p class="text-muted small">Ask recipient <strong>{{ selectedOrderForOtp?.recipientName }}</strong> for the 4-digit code displayed on their tracking screen:</p>
+
+    <!-- COD Cash Checkbox -->
+    <div *ngIf="selectedOrderForOtp?.paymentMethod === 'COD'" class="alert alert-warning border-warning my-3 p-3 text-start">
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" id="cashCheck" [(ngModel)]="isCashCollected">
+        <label class="form-check-label fw-bold text-dark" for="cashCheck">
+          💵 Cash Received: Collect ${{ selectedOrderForOtp?.totalBill | number:'1.2-2' }} Cash
+        </label>
+      </div>
+    </div>
+
+    <div class="mb-3 text-center">
+      <input type="text" maxlength="4" class="form-control form-control-lg text-center fs-2 fw-bold tracking-widest" [(ngModel)]="enteredOtp" placeholder="0000" />
+    </div>
+
+    <div class="d-flex justify-content-end gap-2">
+      <button type="button" class="btn btn-secondary fw-bold" (click)="closeOtpModal()">Cancel</button>
+      <button type="button" class="btn btn-success fw-bold" (click)="confirmOtpAndDeliver()">Verify & Complete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Record Failed Attempt Modal -->
+<div class="modal-overlay" *ngIf="showAttemptModal" (click)="closeAttemptModal()">
+  <div class="modal-content-card p-4 shadow bg-white rounded" style="max-width: 480px; width: 100%;" (click)="$event.stopPropagation()">
+    <h4 class="fw-bold text-warning mb-2">⏳ Record Unreachable Contact Attempt</h4>
+    <p class="text-muted small">Attempt {{ (selectedOrderForAttempt?.deliveryAttempts || 0) + 1 }} of 3. (3 failed attempts automatically flags order as Return to Origin):</p>
+
+    <div class="mb-3">
+      <label class="form-label fw-bold">Reason for Failed Attempt</label>
+      <select class="form-select" [(ngModel)]="attemptNote">
+        <option value="Customer Phone Unanswered / Switch off">Customer Phone Unanswered / Switch off</option>
+        <option value="Customer Premises Door Locked">Customer Premises Door Locked</option>
+        <option value="Customer Asked to Reschedule Delivery">Customer Asked to Reschedule Delivery</option>
+      </select>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2">
+      <button type="button" class="btn btn-secondary fw-bold" (click)="closeAttemptModal()">Close</button>
+      <button type="button" class="btn btn-warning fw-bold" (click)="submitFailedAttempt()">Record Attempt</button>
+    </div>
+  </div>
+</div>
+
+<!-- On-Field Cancellation Modal -->
+<div class="modal-overlay" *ngIf="showCancelModal" (click)="closeCancelModal()">
+  <div class="modal-content-card p-4 shadow bg-white rounded" style="max-width: 500px; width: 100%;" (click)="$event.stopPropagation()">
+    <h4 class="fw-bold text-danger mb-3">⚠️ Report Field Exception</h4>
+    
+    <div class="mb-3">
+      <label class="form-label fw-bold">Select Preset Reason</label>
+      <select class="form-select mb-2" [(ngModel)]="cancelPresetReason">
+        <option value="Customer Refused Acceptance">Customer Refused Acceptance</option>
+        <option value="Wrong Delivery Address">Wrong Delivery Address</option>
+        <option value="Package Damaged in Transit">Package Damaged in Transit</option>
+        <option value="OTHERS">Others (Type Custom Reason)</option>
+      </select>
+
+      <textarea *ngIf="cancelPresetReason === 'OTHERS'" class="form-control" rows="3" [(ngModel)]="customCancelReason" placeholder="Type reason..."></textarea>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2">
+      <button type="button" class="btn btn-secondary fw-bold" (click)="closeCancelModal()">Close</button>
+      <button type="button" class="btn btn-danger fw-bold" (click)="submitOnFieldCancellation()">Submit Cancellation</button>
+    </div>
+  </div>
+</div>

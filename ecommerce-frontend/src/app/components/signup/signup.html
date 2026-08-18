@@ -1,0 +1,39 @@
+<div class="signup-wrapper">
+  <div class="signup-card">
+    
+    <!-- Updated Header with Login Page Logo & Branding -->
+    <div class="signup-header">
+      <div class="brand-logo">
+        <span class="cart-icon">🛒</span>
+        <h1 class="brand-title">MicroMarket</h1>
+      </div>
+      <h2>Create Account</h2>
+      <p>Join our decentralized microservices marketplace platform</p>
+    </div>
+    
+    <!-- Input Fields -->
+    <div class="input-group">
+      <label>Full Name</label>
+      <input type="text" [(ngModel)]="name" placeholder="Enter your full name" />
+    </div>
+
+    <div class="input-group">
+      <label>Email Address</label>
+      <input type="email" [(ngModel)]="email" placeholder="example@domain.com" />
+    </div>
+    
+    <div class="input-group">
+      <label>Create Secure Password</label>
+      <input type="password" [(ngModel)]="password" placeholder="••••••••" />
+    </div>
+    
+    <!-- Action Button -->
+    <button class="btn-signup" (click)="onSignup()">Sign Up</button>
+    
+    <!-- Navigation Switch -->
+    <p class="switch-mode">
+      Already have an account? <span (click)="goToLogin()">Login Here</span>
+    </p>
+
+  </div>
+</div>
