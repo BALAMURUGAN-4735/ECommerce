@@ -1,0 +1,718 @@
+<div class="ecommerce-admin-layout">
+  <!-- 🧭 SIDEBAR NAVIGATION -->
+  <aside class="admin-sidebar no-print">
+    <div class="sidebar-brand">
+      <h3>🛒 MicroMarket <span class="badge-admin">ADMIN</span></h3>
+    </div>
+    
+    <nav class="sidebar-menu">
+      <button type="button" [class.active]="activeTab === 'overview'" (click)="setActiveTab('overview')">
+        📊 Analytics & Health
+      </button>
+      <button type="button" [class.active]="activeTab === 'products'" (click)="setActiveTab('products')">
+        📦 Product Inventory
+      </button>
+      <button type="button" [class.active]="activeTab === 'orders'" (click)="setActiveTab('orders')">
+        🚚 Order & Distribution
+      </button>
+      <button type="button" [class.active]="activeTab === 'refunds'" (click)="setActiveTab('refunds')">
+        💳 Refund Management
+      </button>
+      <button type="button" [class.active]="activeTab === 'users'" (click)="setActiveTab('users')">
+        👥 User Accounts
+      </button>
+      <button type="button" [class.active]="activeTab === 'audits'" (click)="setActiveTab('audits')">
+        📜 Audit System Logs
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <p class="m-0 text-muted small">LoggedIn: <strong>Administrator</strong></p>
+      <button type="button" class="btn-logout-sm" (click)="router.navigate(['/'])">Exit Panel</button>
+    </div>
+  </aside>
+
+  <!-- 🖥️ MAIN CONTENT BODY -->
+  <main class="admin-main-content no-print">
+
+    <!-- 📊 TAB 1: OVERVIEW -->
+    <div *ngIf="activeTab === 'overview'" class="tab-pane">
+      <h2 class="page-title mb-4">Dashboard Analytics & System Metrics</h2>
+
+      <div class="metrics-grid mb-4">
+        <div class="metric-card bg-card-revenue p-4 shadow-sm">
+          <span class="metric-label">💰 Total Sales Revenue</span>
+          <h2 class="fw-bold m-0">${{ totalRevenue | number:'1.2-2' }}</h2>
+        </div>
+        <div class="metric-card bg-card-total-orders p-4 shadow-sm">
+          <span class="metric-label">🛍️ Total Overall Orders</span>
+          <h2 class="fw-bold m-0">{{ totalOrdersCount }}</h2>
+        </div>
+        <div class="metric-card bg-card-orders p-4 shadow-sm">
+          <span class="metric-label">📦 Active Logistics Orders</span>
+          <h2 class="fw-bold m-0">{{ activeOrdersCount }}</h2>
+        </div>
+        <div class="metric-card bg-card-refunds p-4 shadow-sm">
+          <span class="metric-label">💳 Processed Refunds</span>
+          <h2 class="fw-bold m-0">${{ totalRefundsProcessed | number:'1.2-2' }}</h2>
+        </div>
+      </div>
+
+      <div class="admin-card mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h4 class="fw-bold text-danger m-0">⚠️ Low Stock Warning (&lt; 5 Items Left)</h4>
+          <span class="badge bg-danger p-2">{{ lowStockProducts.length }} Alert(s)</span>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table align-middle m-0">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Category</th>
+                <th>Stock Left</th>
+                <th>Status</th>
+                <th>Quick Restock</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of lowStockProducts">
+                <td class="fw-bold"><span class="fs-4 me-2">{{ item.icon || '📦' }}</span> {{ item.name }}</td>
+                <td><span class="category-pill">{{ item.category | uppercase }}</span></td>
+                <td class="fw-bold text-danger fs-5">{{ item.stockQuantity }} item(s)</td>
+                <td>
+                  <span class="badge" [ngClass]="item.stockQuantity === 0 ? 'bg-danger' : 'bg-warning text-dark'">
+                    {{ item.stockQuantity === 0 ? 'OUT OF STOCK' : 'CRITICAL STOCK' }}
+                  </span>
+                </td>
+                <td>
+                  <button type="button" class="btn btn-sm btn-primary fw-bold" (click)="openRestockPrompt(item)">🔄 Restock Quantity</button>
+                </td>
+              </tr>
+              <tr *ngIf="lowStockProducts.length === 0">
+                <td colspan="5" class="text-center text-muted py-4">All products have healthy inventory levels!</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 📦 TAB 2: PRODUCT INVENTORY -->
+    <div *ngIf="activeTab === 'products'" class="tab-pane">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="page-title m-0">Product Catalog Management</h2>
+        <button type="button" class="btn btn-success fw-bold" (click)="openAddProductModalFast()">➕ Add New Product</button>
+      </div>
+
+      <div class="admin-card p-3 mb-4">
+        <div class="row g-2">
+          <div class="col-md-6">
+            <input type="text" class="form-control" placeholder="🔎 Search by product name..." [(ngModel)]="prodSearch" (input)="applyProductFilters()" />
+          </div>
+          <div class="col-md-6">
+            <select class="form-select" [(ngModel)]="prodCatFilter" (change)="applyProductFilters()">
+              <option value="ALL">All Categories</option>
+              <option *ngFor="let cat of categoryList" [value]="cat.id">{{ cat.name }}</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-card p-0 overflow-hidden">
+        <table class="table align-middle m-0">
+          <thead>
+            <tr>
+              <th>Icon</th>
+              <th>Name</th>
+              <th>Category</th>
+              <th>Price</th>
+              <th>Stock</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of filteredAdminProducts">
+              <td class="fs-3">{{ p.icon || '📦' }}</td>
+              <td class="fw-bold">{{ p.name }}</td>
+              <td><span class="category-pill">{{ p.category | uppercase }}</span></td>
+              <td class="text-success fw-bold">${{ p.price | number:'1.2-2' }}</td>
+              <td class="fw-bold">{{ p.stockQuantity }}</td>
+              <td>
+                <span class="badge" [ngClass]="p.stockQuantity > 0 ? 'bg-success' : 'bg-danger'">
+                  {{ p.stockQuantity > 0 ? 'IN STOCK' : 'OUT OF STOCK' }}
+                </span>
+              </td>
+              <td class="d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-outline-primary fw-bold" (click)="openEditProductModal(p)">✏️ Edit</button>
+                <button type="button" class="btn btn-sm btn-outline-danger fw-bold" (click)="deleteProduct(p.id)">🗑️ Delete</button>
+              </td>
+            </tr>
+            <tr *ngIf="filteredAdminProducts.length === 0">
+              <td colspan="7" class="text-center text-muted py-4">No matching products found.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 🚚 TAB 3: ORDER & DISTRIBUTION -->
+    <div *ngIf="activeTab === 'orders'" class="tab-pane">
+      <h2 class="page-title mb-4">Distribution & Live Order Logistics</h2>
+
+      <div class="row g-3 mb-4">
+        <div class="col-md-3" *ngFor="let partnerName of ['BlueDart Express', 'Delivery Logistics', 'CourierX Speed', 'In-House Delivery']">
+          <div class="card border-0 shadow-sm p-3 bg-white border-top border-4 border-primary">
+            <h6 class="fw-bold text-dark m-0">{{ partnerName }}</h6>
+            <div class="d-flex justify-content-between align-items-center mt-2">
+              <small class="text-muted">Assigned:</small>
+              <span class="fw-bold text-primary">{{ getPartnerStats(partnerName).assigned }}</span>
+            </div>
+            <div class="d-flex justify-content-between salign-items-center mt-2">
+              <small class=" text-muted">Active / Remaining:</small>
+              <span class="fw-bold text-info">{{ getPartnerStats(partnerName).active }}</span>
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+              <small class="text-muted">Delivered:</small>
+              <span class="fw-bold text-success">{{ getPartnerStats(partnerName).delivered }}</span>
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+              <small class="text-muted">Cancelled/RTO:</small>
+              <span class="fw-bold text-danger">{{ getPartnerStats(partnerName).canceled }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-card p-3 mb-4">
+        <div class="row g-2">
+          <div class="col-md-6">
+            <input type="text" class="form-control" placeholder="🔎 Search by Order ID, Name, Address, or City..." [(ngModel)]="cityFilter" (input)="applyOrderFilters()" />
+          </div>
+          <div class="col-md-6">
+            <select class="form-select" [(ngModel)]="orderStatusFilter" (change)="applyOrderFilters()">
+              <option value="ALL">All Order Stages</option>
+              <option value="PLACED">PLACED</option>
+              <option value="PACKING">PACKING</option>
+              <option value="DISPATCHED">DISPATCHED</option>
+              <option value="DELIVERED">DELIVERED</option>
+              <option value="CANCELLED">CANCELLED</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-card p-0 overflow-hidden">
+        <table class="table align-middle m-0">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Recipient Name & Contact</th>
+              <th>Order Items</th>
+              <th>Delivery Address</th>
+              <th>Current Stage</th>
+              <th>Assigned Partner</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let order of filteredOrders">
+              <td class="fw-bold">#{{ order.orderId || order.id }}</td>
+              <td><strong>{{ order.recipientName || 'Valued Customer' }}</strong><br/><small class="text-muted">{{ order.recipientPhone || 'N/A' }}</small></td>
+              
+              <td>
+                <button type="button" class="btn btn-sm btn-outline-info fw-bold" (click)="openViewItemsModal(order)">
+                  📦 View Items ({{ getItemList(order).length }})
+                </button>
+              </td>
+
+              <td><small>{{ order.shippingAddress || 'Standard Delivery Address' }}</small></td>
+              <td>
+                <span class="badge p-2 text-uppercase" [ngClass]="{
+                  'bg-primary': order.status === 'PLACED',
+                  'bg-warning text-dark': order.status === 'PACKING',
+                  'bg-info text-dark': order.status === 'DISPATCHED' || order.status === 'OUT_FOR_DELIVERY',
+                  'bg-success': order.status === 'DELIVERED',
+                  'bg-danger': order.status === 'CANCELLED' || order.status === 'RTO'
+                }">{{ order.status }}</span>
+                <div *ngIf="(order.status === 'CANCELLED' || order.status === 'RTO') && (order.cancellationReason || order.cancelReason)" class="small text-danger fw-bold mt-1">
+                  Reason: {{ order.cancellationReason || order.cancelReason }}
+                </div>
+              </td>
+
+              <td>
+                <span [ngClass]="(order.courierPartner && order.courierPartner !== 'Delivery Partner Not Assigned Yet') ? 'fw-bold text-dark' : 'badge bg-warning text-dark'">
+                  {{ (order.courierPartner && order.courierPartner !== 'Delivery Partner Not Assigned Yet') ? order.courierPartner : 'Delivery Partner Not Assigned Yet' }}
+                </span>
+              </td>
+
+              <td class="d-flex gap-2">
+                <button *ngIf="order.status !== 'DELIVERED' && order.status !== 'CANCELLED' && order.status !== 'RTO'" 
+                        type="button" class="btn btn-sm btn-primary fw-bold" 
+                        (click)="openDistributionModal(order)">
+                  🚚 Assign Partner
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary fw-bold" (click)="openInvoiceModal(order)">
+                  📄 Invoice
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="filteredOrders.length === 0">
+              <td colspan="7" class="text-center text-muted py-4">No matching orders found.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 💳 TAB 4: REFUNDS -->
+    <div *ngIf="activeTab === 'refunds'" class="tab-pane">
+      <h2 class="page-title mb-4">Order Cancellations & Refund Logs</h2>
+
+      <div class="admin-card p-3 mb-4">
+        <div class="row g-2">
+          <div class="col-md-6">
+            <input type="text" class="form-control" placeholder="🔎 Search by Order ID or Cancellation Reason..." [(ngModel)]="refundSearch" (input)="applyRefundFilters()" />
+          </div>
+          <div class="col-md-6">
+            <select class="form-select" [(ngModel)]="refundStatusFilter" (change)="applyRefundFilters()">
+              <option value="ALL">All Refund Statuses</option>
+              <option value="PENDING">PENDING</option>
+              <option value="PROCESSED">PROCESSED</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-card p-0 overflow-hidden">
+        <table class="table align-middle m-0">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Payment Type</th>
+              <th>Cancellation Reason</th>
+              <th>Refund Amount</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let ref of filteredRefundList">
+              <td class="fw-bold">#{{ ref.orderId }}</td>
+              <td><span class="badge bg-secondary">{{ ref.paymentMethod }}</span></td>
+              <td>{{ ref.cancellationReason }}</td>
+              <td class="fw-bold text-danger">${{ ref.refundAmount | number:'1.2-2' }}</td>
+              <td>
+                <span class="badge" [ngClass]="ref.status === 'PROCESSED' ? 'bg-success' : 'bg-warning text-dark'">
+                  {{ ref.status }}
+                </span>
+              </td>
+              <td>
+                <button *ngIf="ref.status === 'PENDING'" type="button" class="btn btn-sm btn-success fw-bold" (click)="approveRefund(ref.id)">
+                  ✅ Approve Refund
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="filteredRefundList.length === 0">
+              <td colspan="6" class="text-center text-muted py-4">No matching refund requests found.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 👥 TAB 5: USERS -->
+    <div *ngIf="activeTab === 'users'" class="tab-pane">
+      <h2 class="page-title mb-4">User Account & Permission Management</h2>
+
+      <!-- 🟢 UPDATED: Search Input + Status Filter + Role Filter Dropdown -->
+      <div class="admin-card p-3 mb-4">
+        <div class="row g-2">
+          <div class="col-md-4">
+            <input type="text" class="form-control" placeholder="🔎 Search by Name or Email..." [(ngModel)]="userSearch" (input)="applyUserFilters()" />
+          </div>
+          <div class="col-md-4">
+            <select class="form-select" [(ngModel)]="userStatusFilter" (change)="applyUserFilters()">
+              <option value="ALL">All Account Statuses</option>
+              <option value="ACTIVE">ACTIVE</option>
+              <option value="BLOCKED">BLOCKED</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <select class="form-select" [(ngModel)]="userRoleFilter" (change)="applyUserFilters()">
+              <option value="ALL">All Account Roles</option>
+              <option value="user">USER (Customers)</option>
+              <option value="delivery">DELIVERY (Logistics Agents)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-card p-0 overflow-hidden">
+        <table class="table align-middle m-0">
+          <thead>
+            <tr>
+              <th>User ID</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role</th> <!-- 🟢 ADDED: Role Header Column -->
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let u of filteredUserAccountsList">
+              <td class="fw-bold">#{{ u.id }}</td>
+              <td>{{ u.name }}</td>
+              <td>{{ u.email }}</td>
+              
+              <!-- 🟢 ADDED: Role Badge Display -->
+              <td>
+                <span class="badge text-uppercase p-2" [ngClass]="{
+                  'bg-info text-dark': u.role?.toLowerCase() === 'user',
+                  'bg-primary': u.role?.toLowerCase() === 'delivery'
+                }">{{ u.role || 'user' }}</span>
+              </td>
+
+              <td>
+                <span class="badge" [ngClass]="u.status === 'ACTIVE' ? 'bg-success' : 'bg-danger'">
+                  {{ u.status }}
+                </span>
+              </td>
+              <td>
+                <button type="button" class="btn btn-sm" [ngClass]="u.status === 'ACTIVE' ? 'btn-outline-danger' : 'btn-outline-success'" (click)="toggleUserStatus(u)">
+                  {{ u.status === 'ACTIVE' ? '🔒 Block User' : '🔓 Unlock User' }}
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="filteredUserAccountsList.length === 0">
+              <td colspan="6" class="text-center text-muted py-4">No matching users found.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 📜 TAB 6: AUDIT LOGS -->
+    <div *ngIf="activeTab === 'audits'" class="tab-pane">
+      <h2 class="page-title mb-4">System Action Audit History Logs</h2>
+
+      <div class="admin-card p-3 mb-4">
+        <div class="row g-2">
+          <div class="col-md-6">
+            <input type="text" class="form-control" placeholder="🔎 Search by Action Details or Admin User..." [(ngModel)]="auditSearch" (input)="applyAuditFilters()" />
+          </div>
+          <div class="col-md-6">
+            <select class="form-select" [(ngModel)]="auditModuleFilter" (change)="applyAuditFilters()">
+              <option value="ALL">All Modules</option>
+              <option value="ORDER">ORDER</option>
+              <option value="DISTRIBUTION">DISTRIBUTION</option>
+              <option value="INVENTORY">INVENTORY</option>
+              <option value="USER_MGMT">USER_MGMT</option>
+              <option value="PRODUCT">PRODUCT</option>
+              <option value="REFUND">REFUND</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-card p-0 overflow-hidden">
+        <table class="table align-middle m-0">
+          <thead>
+            <tr>
+              <th>Admin / User / Delivery Partner</th>
+              <th>Module</th>
+              <th>Action Details</th>
+              <th>Timestamp</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let log of filteredAuditLogsList">
+              <td class="fw-bold">👤 {{ log.adminUsername || 'Administrator' }}</td>
+              <td><span class="badge bg-dark">{{ log.actionModule || 'SYSTEM' }}</span></td>
+              <td>{{ log.actionMessage }}</td>
+              <td class="text-muted small">{{ log.timestamp | date:'medium' }}</td>
+            </tr>
+            <tr *ngIf="filteredAuditLogsList.length === 0">
+              <td colspan="4" class="text-center text-muted py-4">No matching audit logs found.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ========================================================================= -->
+<!-- 📦 MODALS SECTION -->
+<!-- ========================================================================= -->
+
+<!-- 📦 ORDER ITEMS POPUP MODAL -->
+<div class="modal-overlay no-print" *ngIf="showItemsModal" (click)="closeModals()">
+  <div class="modal-card p-4 shadow-lg border-0 bg-white rounded" style="max-width: 680px;" (click)="$event.stopPropagation()">
+    
+    <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+      <h4 class="fw-bold m-0 text-dark">
+        📦 Order Items Breakdown (#{{ selectedOrderForItems?.orderId || selectedOrderForItems?.id }})
+      </h4>
+      <button type="button" class="btn-close" (click)="closeModals()"></button>
+    </div>
+
+    <div class="table-responsive max-height-300">
+      <table class="table table-bordered align-middle m-0">
+        <thead class="table-light">
+          <tr>
+            <th>PRODUCT NAME & ID</th>
+            <th class="text-center" style="width: 100px;">QTY</th>
+            <th class="text-end" style="width: 140px;">PRICE</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of getItemList(selectedOrderForItems)">
+            <td>
+              <div class="fw-bold text-dark">{{ item.icon || '📦' }} {{ item.name }}</div>
+              <small class="text-muted">ID: {{ item.id }}</small>
+            </td>
+            <td class="text-center fs-6 fw-bold">{{ item.quantity }}</td>
+            <td class="text-end text-success fw-bold">${{ item.subtotal | number:'1.2-2' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top bg-light p-3 rounded">
+      <span class="fw-bold text-muted">Total Items Count: {{ getTotalQuantity(selectedOrderForItems) }}</span>
+      <h4 class="m-0 text-success fw-bold">Grand Total: ${{ getCalculatedGrandTotal(selectedOrderForItems) | number:'1.2-2' }}</h4>
+    </div>
+
+    <div class="text-end mt-3">
+      <button type="button" class="btn btn-primary fw-bold px-4" (click)="closeModals()">Close Details</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- 🚚 DISTRIBUTION / PARTNER ASSIGNMENT MODAL -->
+<div class="modal-overlay no-print" *ngIf="showDistributionModal" (click)="closeModals()">
+  <div class="modal-card p-4" (click)="$event.stopPropagation()">
+    <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+      <h4 class="fw-bold m-0">Assign Logistics Partner</h4>
+      <button type="button" class="btn-close" (click)="closeModals()"></button>
+    </div>
+
+    <p class="text-muted">Order Reference: <strong>#{{ selectedOrderForDispatch?.orderId || selectedOrderForDispatch?.id }}</strong></p>
+
+    <div class="mb-3">
+      <label class="form-label fw-bold">Select Delivery Partner</label>
+      <select class="form-select" [(ngModel)]="dispatchPartner">
+        <option value="BlueDart Express">BlueDart Express</option>
+        <option value="Delivery Logistics">Delivery Logistics</option>
+        <option value="CourierX Speed">CourierX Speed</option>
+        <option value="In-House Delivery ">In-House Delivery </option>
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label fw-bold">Order Stage</label>
+      <select class="form-select" [(ngModel)]="dispatchStage">
+        <option value="PACKING">PACKING (Assigned to Partner)</option>
+        <option value="CANCELLED">CANCELLED (Administrative Order Cancel)</option>
+      </select>
+      <small class="text-muted d-block mt-1">ℹ️ On-field movement (Dispatched / Out for Delivery / Delivery Confirmation) is strictly controlled inside the Delivery Partner Console.</small>
+    </div>
+
+    <div *ngIf="dispatchStage === 'CANCELLED'" class="mb-3">
+      <label class="form-label fw-bold text-danger">Cancellation Reason <span class="text-danger">*</span></label>
+      <select class="form-select mb-2" [(ngModel)]="cancelReasonSelection">
+        <option value="Customer Requested Cancellation">Customer Requested Cancellation</option>
+        <option value="Incorrect Address / Unreachable">Incorrect Address / Unreachable</option>
+        <option value="Item Out of Stock">Item Out of Stock</option>
+        <option value="OTHERS">Others (Type Custom Reason)</option>
+      </select>
+
+      <input *ngIf="cancelReasonSelection === 'OTHERS'" type="text" class="form-control" [(ngModel)]="customCancelReason" placeholder="Type detailed cancellation reason..." />
+    </div>
+
+    <div class="d-flex justify-content-end gap-2 mt-4">
+      <button type="button" class="btn btn-secondary fw-bold" (click)="closeModals()">Close</button>
+      <button type="button" class="btn btn-primary fw-bold" (click)="submitDistributionUpdate()">Assign Partner & Update</button>
+    </div>
+  </div>
+</div>
+
+<!-- ➕ ADD PRODUCT MODAL -->
+<div class="modal-overlay no-print" *ngIf="showAddProductModal" (click)="closeModals()">
+  <div class="modal-card p-4" (click)="$event.stopPropagation()">
+    <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+      <h4 class="fw-bold m-0">Add New Product to Catalog</h4>
+      <button type="button" class="btn-close" (click)="closeModals()"></button>
+    </div>
+    
+    <div class="mb-3">
+      <label class="form-label fw-bold">Product Name</label>
+      <input type="text" class="form-control" [(ngModel)]="newProd.name" placeholder="e.g. Pro Smartphone 5G" />
+    </div>
+
+    <div class="row g-2 mb-3">
+      <div class="col-6">
+        <label class="form-label fw-bold">Category</label>
+        <select class="form-select" [(ngModel)]="newProd.category">
+          <option *ngFor="let cat of categoryList" [value]="cat.id">{{ cat.name }}</option>
+        </select>
+      </div>
+      <div class="col-6">
+        <label class="form-label fw-bold">Product Icon</label>
+        <select class="form-select fs-5" [(ngModel)]="newProd.icon">
+          <option *ngFor="let iconOption of iconDropdownList" [value]="iconOption.emoji">
+            {{ iconOption.emoji }} {{ iconOption.label }}
+          </option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row g-2 mb-3">
+      <div class="col-6">
+        <label class="form-label fw-bold">Price ($)</label>
+        <input type="number" class="form-control" [(ngModel)]="newProd.price" />
+      </div>
+      <div class="col-6">
+        <label class="form-label fw-bold">Initial Stock</label>
+        <input type="number" class="form-control" [(ngModel)]="newProd.stockQuantity" />
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <label class="form-label fw-bold">Product Description</label>
+      <textarea class="form-control" rows="2" [(ngModel)]="newProd.description" placeholder="Enter product details..."></textarea>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2">
+      <button type="button" class="btn btn-secondary fw-bold" (click)="closeModals()">Cancel</button>
+      <button type="button" class="btn btn-success fw-bold" (click)="submitProduct()">Save Product</button>
+    </div>
+  </div>
+</div>
+
+<!-- ✏️ EDIT PRODUCT MODAL -->
+<div class="modal-overlay no-print" *ngIf="showEditProductModal" (click)="closeModals()">
+  <div class="modal-card p-4" (click)="$event.stopPropagation()">
+    <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+      <h4 class="fw-bold m-0">Edit Product Details</h4>
+      <button type="button" class="btn-close" (click)="closeModals()"></button>
+    </div>
+    
+    <div class="mb-3">
+      <label class="form-label fw-bold">Product Name</label>
+      <input type="text" class="form-control" [(ngModel)]="editingProd.name" />
+    </div>
+
+    <div class="row g-2 mb-3">
+      <div class="col-6">
+        <label class="form-label fw-bold">Category</label>
+        <select class="form-select" [(ngModel)]="editingProd.category">
+          <option *ngFor="let cat of categoryList" [value]="cat.id">{{ cat.name }}</option>
+        </select>
+      </div>
+      <div class="col-6">
+        <label class="form-label fw-bold">Product Icon</label>
+        <select class="form-select fs-5" [(ngModel)]="editingProd.icon">
+          <option *ngFor="let iconOption of iconDropdownList" [value]="iconOption.emoji">
+            {{ iconOption.emoji }} {{ iconOption.label }}
+          </option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row g-2 mb-3">
+      <div class="col-6">
+        <label class="form-label fw-bold">Price ($)</label>
+        <input type="number" class="form-control" [(ngModel)]="editingProd.price" />
+      </div>
+      <div class="col-6">
+        <label class="form-label fw-bold">Stock Quantity</label>
+        <input type="number" class="form-control" [(ngModel)]="editingProd.stockQuantity" />
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <label class="form-label fw-bold">Product Description</label>
+      <textarea class="form-control" rows="2" [(ngModel)]="editingProd.description"></textarea>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2">
+      <button type="button" class="btn btn-secondary fw-bold" (click)="closeModals()">Cancel</button>
+      <button type="button" class="btn btn-primary fw-bold" (click)="submitProductEdit()">Update Product</button>
+    </div>
+  </div>
+</div>
+
+<!-- 📄 PRINTABLE INVOICE -->
+<div class="modal-overlay print-overlay" *ngIf="showInvoiceModal" (click)="closeModals()">
+  <div class="modal-card p-4 print-invoice-container bg-white" (click)="$event.stopPropagation()" style="max-width: 700px; margin: auto;">
+    
+    <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
+      <div>
+        <h3 class="fw-bold m-0 text-primary">🛒 MicroMarket</h3>
+        <small class="text-muted">Official Order Invoice & Shipping Label</small>
+      </div>
+      <div class="text-end">
+        <h5 class="fw-bold m-0">#{{ selectedInvoiceOrder?.orderId || selectedInvoiceOrder?.id }}</h5>
+        <small class="text-muted">{{ (selectedInvoiceOrder?.orderDate || 'Now') | date:'medium' }}</small>
+      </div>
+    </div>
+
+    <div class="row mb-3 p-2 bg-light rounded m-0">
+      <div class="col-6">
+        <h6 class="fw-bold text-uppercase text-muted extra-small">Recipient Details</h6>
+        <strong>{{ selectedInvoiceOrder?.recipientName || 'Valued Customer' }}</strong>
+        <p class="m-0 text-muted small">{{ selectedInvoiceOrder?.recipientPhone || 'N/A' }}</p>
+      </div>
+      <div class="col-6 text-end">
+        <h6 class="fw-bold text-uppercase text-muted extra-small">Payment Method</h6>
+        <span class="badge bg-dark fs-6">{{ selectedInvoiceOrder?.paymentMethod || 'CARD' }}</span>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <h6 class="fw-bold text-uppercase text-muted extra-small">Delivery Address</h6>
+      <p class="p-2 border rounded bg-white small m-0">{{ selectedInvoiceOrder?.shippingAddress || 'Standard Delivery Address' }}</p>
+    </div>
+
+    <div class="table-responsive mb-3">
+      <table class="table table-sm table-bordered align-middle m-0">
+        <thead class="table-secondary">
+          <tr>
+            <th>Product Name & ID</th>
+            <th class="text-center" style="width: 80px;">Qty</th>
+            <th class="text-end" style="width: 100px;">Price</th>
+            <th class="text-end" style="width: 110px;">Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of getItemList(selectedInvoiceOrder)">
+            <td>
+              <div class="fw-bold text-dark">{{ item.icon || '📦' }} {{ item.name }}</div>
+              <small class="text-muted">ID: {{ item.id }}</small>
+            </td>
+            <td class="text-center fw-bold">{{ item.quantity }}</td>
+            <td class="text-end">${{ item.unitPrice | number:'1.2-2' }}</td>
+            <td class="text-end fw-bold text-success">${{ item.subtotal | number:'1.2-2' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center pt-2 border-top bg-light p-3 rounded">
+      <span class="fw-bold text-muted">Total Items Count: {{ getTotalQuantity(selectedInvoiceOrder) }}</span>
+      <h4 class="fw-bold text-success m-0">Grand Total: ${{ getCalculatedGrandTotal(selectedInvoiceOrder) | number:'1.2-2' }}</h4>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2 mt-4 no-print">
+      <button type="button" class="btn btn-secondary fw-bold" (click)="closeModals()">Close</button>
+      <button type="button" class="btn btn-primary fw-bold" (click)="printInvoice()">🖨️ Print Invoice</button>
+    </div>
+
+  </div>
+</div>

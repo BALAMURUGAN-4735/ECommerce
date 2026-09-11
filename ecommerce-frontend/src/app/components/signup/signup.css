@@ -1,0 +1,122 @@
+/* Page Background */
+.signup-wrapper {
+  padding: 20px;
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Card Container */
+.signup-card {
+  padding: 40px;
+  width: 100%;
+  max-width: 420px;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  background: #ffffff;
+}
+
+/* Header & Logo Styling */
+.signup-header {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.brand-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.cart-icon {
+  font-size: 32px;
+}
+
+.brand-title {
+  margin: 0;
+  color: #0f172a;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.signup-header h2 {
+  margin: 5px 0;
+  color: #1a1f36;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.signup-header p {
+  color: #697386;
+  font-size: 13px;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Input Fields */
+.input-group {
+  margin-bottom: 20px;
+}
+
+.input-group label {
+  display: block;
+  font-weight: 600;
+  font-size: 14px;
+  color: #4f566b;
+  margin-bottom: 6px;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  box-sizing: border-box;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.input-group input:focus {
+  border-color: #5469d4;
+}
+
+/* Action Button */
+.btn-signup {
+  width: 100%;
+  background: #5469d4;
+  color: white;
+  padding: 14px;
+  border: none;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(84, 105, 212, 0.2);
+  transition: background 0.2s ease;
+}
+
+.btn-signup:hover {
+  background: #4353b2;
+}
+
+/* Footer Switch Mode Link */
+.switch-mode {
+  text-align: center;
+  margin-top: 25px;
+  color: #697386;
+  font-size: 14px;
+}
+
+.switch-mode span {
+  color: #5469d4;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}

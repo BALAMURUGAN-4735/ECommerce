@@ -1,0 +1,59 @@
+<div class="ecommerce-layout">
+  <!-- Shared Navbar Panel -->
+  <header class="main-navbar">
+    <div class="navbar-brand-section">
+      <div class="logo" routerLink="/">🛒 MicroMarket</div>
+    </div>
+    
+    <nav class="quick-links">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Products</a>
+      <a routerLink="/favorites" routerLinkActive="active">❤️ Favorites ({{ storage.favorites.length }})</a>
+      <a routerLink="/cart" routerLinkActive="active">🛒 Cart ({{ storage.cart.length }})</a>
+      <a routerLink="/tracking" routerLinkActive="active">Track Order</a>
+    </nav>
+
+    <div class="auth-action-zone" *ngIf="currentTabUser">
+      <span class="user-greeting">👤 {{ currentTabUser.name }}</span>
+    </div>
+  </header>
+
+  <main class="content-body">
+    <h2 class="section-title">❤️ Your Saved Favorites</h2>
+
+    <!-- Empty State -->
+    <div *ngIf="!storage.favorites || storage.favorites.length === 0" class="no-data">
+      <h5>No favorites added yet.</h5>
+      <p class="m-0">Explore our catalog and save your favorite items here!</p>
+    </div>
+
+    <!-- Favorites Product Cards Grid -->
+    <div *ngIf="storage.favorites && storage.favorites.length > 0" class="catalog-showcase">
+      <div class="products-grid">
+        <div *ngFor="let prod of storage.favorites" class="product-item-card">
+          
+          <!-- Favorite Heart Button -->
+          <button class="btn-favorite-heart" 
+                  (click)="storage.toggleFavorite(prod)" 
+                  title="Remove from favorites">
+            ❤️
+          </button>
+          
+          <div class="product-image-placeholder">{{ prod.icon || '📦' }}</div>
+          
+          <div class="product-info">
+            <h4>{{ prod.name || prod.productName }}</h4>
+            <p class="description">{{ prod.description || 'No description available' }}</p>
+            
+            <div class="footer-row">
+              <span class="price">${{ prod.price || prod.productPrice || '0.00' }}</span>
+              <button class="btn-checkout-bulk" (click)="moveToCart(prod)">
+                🛒 Add to Cart
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

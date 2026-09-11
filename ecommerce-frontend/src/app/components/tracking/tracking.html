@@ -1,0 +1,340 @@
+<div class="ecommerce-layout">
+  <!-- Shared Navbar Panel -->
+  <header class="main-navbar">
+    <div class="navbar-brand-section">
+      <div class="logo" routerLink="/">🛒 MicroMarket</div>
+    </div>
+    
+    <nav class="quick-links">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Products</a>
+      <a routerLink="/favorites" routerLinkActive="active">❤️ Favorites ({{ storage.favorites.length }})</a>
+      <a routerLink="/cart" routerLinkActive="active">🛒 Cart ({{ storage.cart.length }})</a>
+      <a routerLink="/tracking" routerLinkActive="active">Track Order</a>
+    </nav>
+
+    <div class="auth-action-zone" *ngIf="currentTabUser">
+      <span class="fw-bold">👤 {{ currentTabUser.name }}</span>
+    </div>
+  </header>
+
+  <main class="content-body">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="fw-bold m-0">🚚 Order Tracking Center</h2>
+      
+      <!-- MANUAL REFRESH + AUTO-REFRESH START/STOP TOGGLE BUTTONS -->
+      <div class="d-flex gap-2">
+        <button class="btn btn-outline-primary btn-sm fw-bold" (click)="loadUserOrders()">🔄 Refresh Status</button>
+        <button class="btn btn-sm fw-bold" [ngClass]="isAutoRefreshActive ? 'btn-danger' : 'btn-success'" (click)="toggleAutoRefresh()">
+          {{ isAutoRefreshActive ? '⏸️ Stop Auto-Refresh' : '▶️ Start Auto-Refresh' }}
+        </button>
+      </div>
+    </div>
+    <br>
+
+    <!-- 🔍 HORIZONTAL FLEX FILTER BAR -->
+    <div class="filter-bar-card mb-4">
+      <div class="filter-flex-row">
+        <!-- Search Input -->
+        <div class="filter-group search-group">
+          <input 
+            type="text" 
+            class="form-control" 
+            placeholder="🔎 Search Order ID or Item..." 
+            [(ngModel)]="searchQuery" 
+            (ngModelChange)="applyFilters()"
+          />
+        </div>
+
+        <!-- Month Filter -->
+        <div class="filter-group select-group">
+          <select class="form-select" [(ngModel)]="selectedMonth" (change)="applyFilters()">
+            <option value="ALL">All Months</option>
+            <option value="0">January</option>
+            <option value="1">February</option>
+            <option value="2">March</option>
+            <option value="3">April</option>
+            <option value="4">May</option>
+            <option value="5">June</option>
+            <option value="6">July</option>
+            <option value="7">August</option>
+            <option value="8">September</option>
+            <option value="9">October</option>
+            <option value="10">November</option>
+            <option value="11">December</option>
+          </select>
+        </div>
+
+        <!-- Year Filter -->
+        <div class="filter-group select-group">
+          <select class="form-select" [(ngModel)]="selectedYear" (change)="applyFilters()">
+            <option value="ALL">All Years</option>
+            <option *ngFor="let year of availableYears" [value]="year">{{ year }}</option>
+          </select>
+        </div>
+
+        <!-- Clear Button -->
+        <div class="filter-group btn-group-action">
+          <button class="btn btn-secondary text-nowrap fw-bold" (click)="resetFilters()">Clear Filters</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="filteredOrders.length === 0" class="alert alert-info text-center p-4">
+      <h5>No orders found matching your filter criteria.</h5>
+      <p class="m-0">Try clearing filters or search terms to see all orders!</p>
+    </div>
+
+    <!-- 📊 MASTER-DETAIL TRACKING PANEL -->
+    <div *ngIf="filteredOrders.length > 0" class="tracking-split-container">
+      
+      <!-- 📜 LEFT PANEL: SCROLLABLE ORDER SUMMARY CARDS -->
+      <div class="orders-sidebar-list">
+        <h6 class="text-uppercase text-muted fw-bold mb-3">Filtered Orders ({{ filteredOrders.length }})</h6>
+        
+        <div class="scroll-cards-wrapper">
+          <div 
+            *ngFor="let order of filteredOrders" 
+            class="order-summary-card" 
+            [class.active-card]="selectedOrder?.orderId === order.orderId"
+            (click)="selectOrder(order)"
+          >
+            <div class="d-flex justify-content-between align-items-start mb-1">
+              <span class="order-id">#{{ order.orderId }}</span>
+              <span class="status-pill" [ngClass]="{
+                'status-cancelled': order.status === 'CANCELLED' || order.status === 'RTO',
+                'status-delivered': order.status === 'DELIVERED',
+                'status-active': order.status !== 'CANCELLED' && order.status !== 'DELIVERED' && order.status !== 'RTO'
+              }">{{ order.status || 'PLACED' }}</span>
+            </div>
+            
+            <div class="order-meta text-muted">
+              <span>📅 {{ order.orderDate | date:'shortDate' }}</span>
+              <span class="fw-bold text-dark">${{ order.grandTotal | number:'1.2-2' }}</span>
+            </div>
+            
+            <small class="text-secondary d-block mt-1 text-truncate">
+              Items ({{ order.items.length }}): 
+              <span *ngFor="let item of order.items; let last = last">{{ item.productName }}{{ last ? '' : ', ' }}</span>
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <!-- 🔍 RIGHT PANEL: DETAILED VIEW OF SELECTED ORDER -->
+      <div class="order-details-viewer" *ngIf="selectedOrder">
+        <div class="card border-0 shadow-sm p-4">
+          
+          <div class="d-flex justify-content-between align-items-center pb-3 mb-3 border-bottom">
+            <div>
+              <h4 class="fw-bold m-0">#{{ selectedOrder.orderId }}</h4>
+              <small class="text-muted">Placed on: {{ selectedOrder.orderDate | date:'medium' }}</small>
+            </div>
+            <span class="badge p-2 text-uppercase fs-6" [ngClass]="{
+              'bg-danger': selectedOrder.status === 'CANCELLED' || selectedOrder.status === 'RTO',
+              'bg-success': selectedOrder.status === 'DELIVERED',
+              'bg-primary': selectedOrder.status === 'PLACED',
+              'bg-warning text-dark': selectedOrder.status === 'PACKING',
+              'bg-info text-dark': selectedOrder.status === 'DISPATCHED' || selectedOrder.status === 'OUT_FOR_DELIVERY',
+              'bg-secondary': selectedOrder.status === 'WAITING_FOR_DELIVERY'
+            }">{{ selectedOrder.status || 'PLACED' }}</span>
+          </div>
+
+          <!-- 🔑 LIVE OTP NOTIFICATION BANNER FOR CUSTOMER -->
+          <div class="alert alert-success border-2 border-success d-flex justify-content-between align-items-center py-3 mb-3 shadow-sm" 
+               *ngIf="selectedOrder.status === 'OUT_FOR_DELIVERY' || selectedOrder.status === 'WAITING_FOR_DELIVERY'">
+            <div>
+              <h5 class="fw-bold m-0 text-success">🔑 Delivery Verification OTP: <span class="badge bg-success fs-4 px-3 py-1">{{ selectedOrder.deliveryOtp || '4735' }}</span></h5>
+              <small class="text-dark">Share this 4-digit verification code with your delivery agent <strong>{{ trackingDetails?.courierPartner || 'Partner' }}</strong> upon parcel arrival!</small>
+            </div>
+            <span class="fs-1">🛵</span>
+          </div>
+
+          <!-- 💵 COD CASH COLLECTION NOTIFICATION -->
+          <div class="alert alert-warning py-2 mb-3 fw-bold" *ngIf="selectedOrder.paymentMethod === 'COD' && selectedOrder.status !== 'DELIVERED' && selectedOrder.status !== 'CANCELLED' && selectedOrder.status !== 'RTO'">
+            💵 Payment Mode: Cash on Delivery (COD) — Please keep <strong>${{ selectedOrder.grandTotal | number:'1.2-2' }}</strong> cash ready for collection.
+          </div>
+
+          <!-- 🚚 ASSIGNED DELIVERY PARTNER DISPLAY -->
+          <div class="alert alert-primary d-flex justify-content-between align-items-center py-2 mb-3" *ngIf="selectedOrder.status !== 'CANCELLED' && selectedOrder.status !== 'RTO'">
+            <div>
+              <span>🚚 <strong>Delivery Partner:</strong> 
+                <span [ngClass]="{'text-warning fw-bold': !trackingDetails?.courierPartner || trackingDetails?.courierPartner === 'Delivery Partner Not Assigned Yet'}">
+                  {{ trackingDetails?.courierPartner && trackingDetails?.courierPartner !== 'Delivery Partner Not Assigned Yet' ? trackingDetails?.courierPartner : 'Delivery Partner Not Assigned Yet' }}
+                </span>
+              </span>
+            </div>
+            <span class="badge" [ngClass]="trackingDetails?.courierPartner && trackingDetails?.courierPartner !== 'Delivery Partner Not Assigned Yet' ? 'bg-dark' : 'bg-warning text-dark'">
+              {{ trackingDetails?.courierPartner && trackingDetails?.courierPartner !== 'Delivery Partner Not Assigned Yet' ? 'Active Route' : 'Awaiting Assignment' }}
+            </span>
+          </div>
+
+          <!-- Order Details & Items Box -->
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <label class="fw-bold m-0">Ordered Items ({{ selectedOrder.items.length }}):</label>
+                
+                <button type="button" class="btn btn-sm btn-outline-info fw-bold" (click)="openAllItemsModal()">
+                  📦 View Items ({{ selectedOrder.items.length }})
+                </button>
+              </div>
+              
+              <!-- Items List with Product Logo/Icon and Name -->
+              <div class="items-scroll-box p-2 border rounded mb-2" style="max-height: 160px; overflow-y: auto;">
+                <div *ngFor="let item of selectedOrder.items" class="item-chip py-2 border-bottom d-flex justify-content-between align-items-center">
+                  <span>{{ item.productIcon || '🛒' }} <strong>{{ item.productName }}</strong> (x{{ item.quantity }})</span>
+                  <span class="fw-bold text-dark">${{ item.subtotal | number:'1.2-2' }}</span>
+                </div>
+              </div>
+
+              <p class="mt-2 m-0"><strong>Grand Total Paid:</strong> <span class="text-success fw-bold fs-5">${{ selectedOrder.grandTotal | number:'1.2-2' }}</span></p>
+            </div>
+
+            <div class="col-md-6">
+              <p *ngIf="selectedOrder.recipientName"><strong>Recipient:</strong> {{ selectedOrder.recipientName }} ({{ selectedOrder.recipientPhone }})</p>
+              <p *ngIf="selectedOrder.shippingAddress"><strong>Delivery Address:</strong> {{ selectedOrder.shippingAddress }}</p>
+              <p *ngIf="selectedOrder.paymentMethod"><strong>Payment Method:</strong> {{ selectedOrder.paymentMethod }}</p>
+            </div>
+          </div>
+
+          <!-- Cancellation / Field Log Note -->
+          <div *ngIf="selectedOrder.cancelReason" class="alert alert-danger py-2 mb-4">
+            <strong>Log / Cancellation Note:</strong> {{ selectedOrder.cancelReason }}
+          </div>
+
+          <!-- 📊 VISUAL STEPPER TIMELINE (ACTIVE / DELIVERED ORDERS) -->
+          <div class="stepper-wrapper my-4" *ngIf="selectedOrder.status !== 'CANCELLED' && selectedOrder.status !== 'RTO'">
+            <div class="stepper-item" [ngClass]="getStepClass(selectedOrder.status, 'PLACED')">
+              <div class="step-counter">1</div>
+              <div class="step-name">Placed</div>
+              <div class="step-date text-muted extra-small mt-1">{{ getStageTimestamp(1) }}</div>
+            </div>
+            <div class="stepper-item" [ngClass]="getStepClass(selectedOrder.status, 'PACKING')">
+              <div class="step-counter">2</div>
+              <div class="step-name">Packing</div>
+              <div class="step-date text-muted extra-small mt-1">{{ getStageTimestamp(2) }}</div>
+            </div>
+            <div class="stepper-item" [ngClass]="getStepClass(selectedOrder.status, 'DISPATCHED')">
+              <div class="step-counter">3</div>
+              <div class="step-name">Dispatched</div>
+              <div class="step-date text-muted extra-small mt-1">{{ getStageTimestamp(3) }}</div>
+            </div>
+            <div class="stepper-item" [ngClass]="getStepClass(selectedOrder.status, 'OUT_FOR_DELIVERY')">
+              <div class="step-counter">4</div>
+              <div class="step-name">Out for Delivery</div>
+              <div class="step-date text-muted extra-small mt-1">{{ getStageTimestamp(4) }}</div>
+            </div>
+            <div class="stepper-item" [ngClass]="getStepClass(selectedOrder.status, 'DELIVERED')">
+              <div class="step-counter">5</div>
+              <div class="step-name">Delivered</div>
+              <div class="step-date text-muted extra-small mt-1">{{ getStageTimestamp(5) }}</div>
+            </div>
+          </div>
+
+          <!-- ✖️ VISUAL STEPPER TIMELINE (CANCELLED ORDERS SHOWING PROGRESS & CANCELLATION STEP) -->
+          <div class="stepper-wrapper my-4" *ngIf="selectedOrder.status === 'CANCELLED' || selectedOrder.status === 'RTO'">
+            <div class="stepper-item completed">
+              <div class="step-counter">1</div>
+              <div class="step-name">Placed</div>
+              <div class="step-date text-muted extra-small mt-1">{{ getStageTimestamp(1) }}</div>
+            </div>
+
+            <div class="stepper-item" [ngClass]="getCancelledLastStageIndex(selectedOrder) >= 2 ? 'completed' : ''">
+              <div class="step-counter">2</div>
+              <div class="step-name">Packing</div>
+              <div class="step-date text-muted extra-small mt-1">{{ getStageTimestamp(2) }}</div>
+            </div>
+
+            <div class="stepper-item" [ngClass]="getCancelledLastStageIndex(selectedOrder) >= 3 ? 'completed' : ''">
+              <div class="step-counter">3</div>
+              <div class="step-name">Dispatched</div>
+              <div class="step-date text-muted extra-small mt-1">{{ getStageTimestamp(3) }}</div>
+            </div>
+
+            <!-- Red Cancelled Badge Stage -->
+            <div class="stepper-item active text-danger">
+              <div class="step-counter bg-danger text-white border-danger">✖</div>
+              <div class="step-name text-danger fw-bold">Cancelled</div>
+              <div class="step-date text-danger extra-small mt-1 fw-bold">{{ getStageTimestamp(getCancelledLastStageIndex(selectedOrder)) }}</div>
+            </div>
+          </div>
+
+          <!-- Cancel Order Trigger -->
+          <div class="d-flex justify-content-end" *ngIf="selectedOrder.status !== 'CANCELLED' && selectedOrder.status !== 'DELIVERED' && selectedOrder.status !== 'RTO'">
+            <button class="btn btn-outline-danger btn-sm fw-bold" (click)="openCancelModal(selectedOrder.orderId)">
+              ❌ Cancel Order
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- 📦 ALL ITEMS FULL DETAIL POPUP MODAL -->
+<div class="modal-overlay" *ngIf="showAllItemsModal" (click)="closeAllItemsModal()">
+  <div class="modal-content-card p-4" style="max-width: 680px; width: 100%;" (click)="$event.stopPropagation()">
+    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+      <h4 class="m-0 fw-bold">📦 Order Items Breakdown (#{{ selectedOrder?.orderId }})</h4>
+      <button type="button" class="btn-close" (click)="closeAllItemsModal()"></button>
+    </div>
+
+    <div class="table-responsive mb-3" style="max-height: 350px; overflow-y: auto;">
+      <table class="table table-bordered align-middle m-0">
+        <thead class="table-light">
+          <tr>
+            <th>Product Name</th>
+            <th class="text-center" style="width: 100px;">Quantity</th>
+            <th class="text-end" style="width: 140px;">Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of selectedOrder?.items">
+            <td>
+              <div class="fw-bold">{{ item.productIcon || '🛒' }} {{ item.productName }}</div>
+              <small class="text-muted">ID: {{ item.productId }}</small>
+            </td>
+            <td class="text-center fw-bold fs-6">{{ item.quantity }}</td>
+            <td class="text-end fw-bold text-success">${{ item.subtotal | number:'1.2-2' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center bg-light p-3 rounded mb-3 border">
+      <strong class="text-muted">Total Items Count: {{ getTotalQuantity(selectedOrder) }}</strong>
+      <strong class="text-success fs-5">Grand Total: ${{ selectedOrder?.grandTotal | number:'1.2-2' }}</strong>
+    </div>
+
+    <div class="d-flex justify-content-end">
+      <button type="button" class="btn btn-primary fw-bold px-4" (click)="closeAllItemsModal()">Close Details</button>
+    </div>
+  </div>
+</div>
+
+<!-- Cancellation Modal -->
+<div class="modal-overlay" *ngIf="showCancelModal" (click)="closeCancelModal()">
+  <div class="modal-content-card p-4" (click)="$event.stopPropagation()">
+    <h4 class="fw-bold">Cancel Order</h4>
+    <p>Select cancellation reason for <strong>#{{ selectedOrderIdForCancel }}</strong>:</p>
+
+    <div class="d-flex flex-column gap-2 my-3">
+      <label><input type="radio" name="reason" value="Ordered by mistake" [(ngModel)]="cancelReasonOption" /> Ordered by mistake</label>
+      <label><input type="radio" name="reason" value="Found cheaper price elsewhere" [(ngModel)]="cancelReasonOption" /> Found cheaper price elsewhere</label>
+      <label><input type="radio" name="reason" value="Delivery time is too long" [(ngModel)]="cancelReasonOption" /> Delivery time is too long</label>
+      <label><input type="radio" name="reason" value="OTHERS" [(ngModel)]="cancelReasonOption" /> Others (Type manually)</label>
+    </div>
+
+    <div *ngIf="cancelReasonOption === 'OTHERS'" class="mb-3">
+      <textarea class="form-control" rows="3" [(ngModel)]="manualCancelReason" placeholder="Type reason..."></textarea>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2">
+      <button type="button" class="btn btn-secondary fw-bold" (click)="closeCancelModal()">Close</button>
+      <button type="button" class="btn btn-danger fw-bold" (click)="submitCancellation()">Confirm Cancel</button>
+    </div>
+  </div>
+</div>
