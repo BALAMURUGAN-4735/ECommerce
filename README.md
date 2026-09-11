@@ -1,196 +1,187 @@
 # 🛒 Full-Stack E-Commerce Platform
 
-A scalable and responsive **Full-Stack E-Commerce Platform** built using **Angular, Spring Boot, Spring Cloud, Microservices, Eureka Service Discovery, API Gateway, and MySQL**.
+A modern **Full-Stack E-Commerce Platform** developed using **Angular, Spring Boot, Spring Cloud Microservices, MySQL, and REST APIs**.
 
-The project is designed using a **microservices architecture**, where different business functionalities such as users, products, orders, administration, and distribution are handled by independent services.
+This project was developed during my internship at **JD Software Pvt. Ltd., Kolapakkam, Chennai**, with a focus on building a scalable e-commerce application using a microservices-based architecture.
 
 ---
 
-## 📌 Project Overview
+## 🚀 Project Overview
 
-The **Full-Stack E-Commerce Platform** provides an online shopping experience where users can browse products, register and log in, manage their shopping activities, place orders, and track order-related information.
+The Full-Stack E-Commerce Platform provides a complete online shopping experience where users can:
 
-The backend is divided into multiple independent microservices to improve scalability, maintainability, and service-level separation.
+* Register and log in
+* Browse products
+* Filter products by category
+* View product details
+* Add products to favorites
+* Add products to cart
+* Proceed through checkout
+* Place and manage orders
+* Track order/delivery status
 
-### 🎯 Main Objectives
+The platform also provides dedicated **Admin** and **Distribution** functionalities for managing products, users, orders, and deliveries.
 
-* Build a complete full-stack e-commerce application
-* Implement a microservices-based backend
-* Develop a responsive Angular frontend
-* Create REST APIs using Spring Boot
-* Implement service discovery using Eureka
-* Use API Gateway for centralized backend routing
-* Integrate MySQL databases
-* Implement user, product, order, admin, and distribution management
-* Gain practical experience with real-world full-stack development
+---
+
+## 🎯 Project Objectives
+
+* Build a complete full-stack e-commerce application.
+* Implement a scalable **microservices architecture**.
+* Develop a responsive frontend using Angular.
+* Develop backend services using Spring Boot.
+* Implement RESTful APIs for frontend-backend communication.
+* Use MySQL for persistent data storage.
+* Implement API Gateway for centralized request routing.
+* Implement Eureka Server for service discovery.
+* Understand real-world software development and Git/GitHub workflow.
 
 ---
 
 # 🏗️ System Architecture
 
 ```text
-                    ┌───────────────────────┐
-                    │    Angular Frontend   │
-                    │     Port: 4200        │
-                    └───────────┬───────────┘
-                                │
-                                ▼
-                    ┌───────────────────────┐
-                    │      API Gateway      │
-                    │      Port: 8080       │
-                    └───────────┬───────────┘
-                                │
-             ┌──────────────────┼──────────────────┐
-             │                  │                  │
-             ▼                  ▼                  ▼
-      ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-      │ User Service│    │Product      │    │Order Service│
-      │             │    │Service      │    │             │
-      └──────┬──────┘    └──────┬──────┘    └──────┬──────┘
-             │                  │                  │
-             ▼                  ▼                  ▼
-        ┌─────────┐        ┌─────────┐        ┌─────────┐
-        │ MySQL   │        │ MySQL   │        │ MySQL   │
-        └─────────┘        └─────────┘        └─────────┘
+                         ┌──────────────────────┐
+                         │   Angular Frontend   │
+                         │      Port: 4200      │
+                         └──────────┬───────────┘
+                                    │
+                                    ▼
+                         ┌──────────────────────┐
+                         │     API Gateway      │
+                         │      Port: 8080      │
+                         └──────────┬───────────┘
+                                    │
+              ┌─────────────────────┼─────────────────────┐
+              │                     │                     │
+              ▼                     ▼                     ▼
+       ┌─────────────┐       ┌─────────────┐       ┌─────────────┐
+       │ User Service│       │Product       │       │Order Service│
+       │   :8085     │       │Service :8081 │       │   :8082     │
+       └──────┬──────┘       └──────┬──────┘       └──────┬──────┘
+              │                     │                     │
+              ▼                     ▼                     ▼
+       ┌─────────────┐       ┌─────────────┐       ┌─────────────┐
+       │ MySQL       │       │ MySQL       │       │ MySQL       │
+       │micro_user_db│       │micro_product│       │Order DB     │
+       └─────────────┘       └─────────────┘       └─────────────┘
 
-             ┌─────────────────────────────────────┐
-             │          Other Services              │
-             │                                     │
-             │  Admin Service                      │
-             │  Distribution Service               │
-             └─────────────────────────────────────┘
+              ┌─────────────────────────────────────┐
+              │         Eureka Server               │
+              │       Service Discovery             │
+              └─────────────────────────────────────┘
 
-                         ▲
-                         │
-                  ┌───────────────┐
-                  │ Eureka Server │
-                  │ Service       │
-                  │ Discovery     │
-                  └───────────────┘
+              ┌─────────────────────────────────────┐
+              │ Admin Service / Distribution Service│
+              └─────────────────────────────────────┘
 ```
 
 ---
 
 # 🧩 Microservices
 
-The project is divided into the following major modules:
-
-### 1. 👤 User Service
+## 👤 User Service
 
 Responsible for user-related operations.
 
-**Responsibilities:**
+### Responsibilities
 
 * User registration
 * User login
-* User information management
-* User database operations
-* User-related REST APIs
-* Eureka service registration
-
----
-
-### 2. 📦 Product Service
-
-Responsible for managing products in the e-commerce platform.
-
-**Responsibilities:**
-
-* Product management
-* Product catalog
-* Product information
-* Product database operations
-* Product-related REST APIs
-* Service registration with Eureka
-
----
-
-### 3. 🛒 Order Service
-
-Responsible for order-related operations.
-
-**Responsibilities:**
-
-* Order creation
-* Order management
+* User management
+* User information
+* Authentication-related operations
 * User order information
-* Order processing
-* Order database operations
-* REST API integration
+
+**Port:** `8085`
+
+**Database:** `micro_user_db`
 
 ---
 
-### 4. 👨‍💼 Admin Service
+## 📦 Product Service
 
-Responsible for administration-related operations.
+Responsible for product catalog management.
 
-**Responsibilities:**
+### Responsibilities
 
-* Administrative operations
-* Product/order management support
-* Admin-related APIs
-* Backend administration functionality
+* Add products
+* Update products
+* Delete products
+* View products
+* Product details
+* Category management
+* Product filtering
 
----
+**Port:** `8081`
 
-### 5. 🚚 Distribution Service
-
-Responsible for distribution and delivery-related functionality.
-
-**Responsibilities:**
-
-* Distribution management
-* Delivery-related operations
-* Order distribution workflow
-* Delivery information handling
+**Database:** `micro_product_db`
 
 ---
 
-### 6. 🌐 API Gateway
+## 🛍️ Order Service
 
-The API Gateway acts as the central entry point between the Angular frontend and backend microservices.
+Responsible for order processing.
 
-```text
-Angular
-   │
-   ▼
-API Gateway
-   │
-   ├── User Service
-   ├── Product Service
-   ├── Order Service
-   ├── Admin Service
-   └── Distribution Service
-```
+### Responsibilities
 
-**Benefits:**
+* Create orders
+* Manage orders
+* Retrieve user orders
+* Order status management
+* Checkout-related operations
 
-* Centralized routing
-* Simplified frontend communication
-* Microservice endpoint management
-* Single entry point for backend services
+**Port:** `8082`
 
 ---
 
-### 7. 🔎 Eureka Server
+## 👨‍💼 Admin Service
 
-Eureka is used for **service discovery**.
+Provides administrative functionalities.
 
-Instead of hardcoding service locations, backend services register themselves with Eureka.
+### Responsibilities
 
-```text
-                 Eureka Server
-                      │
-       ┌──────────────┼──────────────┐
-       ▼              ▼              ▼
- User Service   Product Service   Order Service
-       │              │              │
-       └──────────────┼──────────────┘
-                      │
-              Service Discovery
-```
+* Manage products
+* Manage users
+* Manage orders
+* Monitor application operations
+* Administrative dashboard
 
-This makes communication between microservices easier and supports a distributed architecture.
+---
+
+## 🚚 Distribution Service
+
+Responsible for distribution and delivery-related operations.
+
+### Responsibilities
+
+* Delivery management
+* Distribution workflow
+* Delivery status
+* Delivery dashboard
+
+---
+
+## 🌐 API Gateway
+
+The API Gateway acts as the central entry point between the frontend and backend microservices.
+
+**Port:** `8080`
+
+### Responsibilities
+
+* Request routing
+* Centralized API access
+* Microservice communication
+* Frontend-backend integration
+
+---
+
+## 🔎 Eureka Service Discovery
+
+Eureka is used for **service discovery** in the microservices architecture.
+
+It allows backend services to discover and communicate with each other without depending on hard-coded service locations.
 
 ---
 
@@ -198,11 +189,19 @@ This makes communication between microservices easier and supports a distributed
 
 The frontend is developed using **Angular** and **TypeScript**.
 
-The repository contains the Angular application inside:
+### Main Pages
 
-```text
-ecommerce-frontend/
-```
+* Home
+* Login
+* Signup
+* Product Catalog
+* Product Details
+* Favorites
+* Cart
+* Checkout
+* Orders
+* Delivery Dashboard
+* Admin Dashboard
 
 ### Frontend Technologies
 
@@ -210,181 +209,134 @@ ecommerce-frontend/
 * TypeScript
 * HTML5
 * CSS3
-* Angular CLI
-* REST API integration
-* Responsive UI
-
-The frontend provides the user interface for browsing products and interacting with the e-commerce application.
+* Angular Routing
+* REST API Integration
+* Responsive Design
 
 ---
 
 # ⚙️ Backend
 
-The backend is developed using **Java and Spring Boot**.
+The backend is developed using **Java and Spring Boot** with a microservices architecture.
 
 ### Backend Technologies
 
-* Java 21
-* Spring Boot 3.2.5
+* Java
+* Spring Boot
 * Spring Cloud
+* Spring Web
 * Spring Data JPA
 * REST APIs
-* MySQL
-* Maven
 * Eureka Client
-
-The repository configuration uses Spring Cloud `2023.0.1` and Java 21 for the Spring Boot services.
+* API Gateway
+* Maven
 
 ---
 
 # 🗄️ Database
 
-The application uses **MySQL** for persistent data storage.
+The project uses **MySQL** for persistent data storage.
 
-Each major microservice can maintain its own database/schema, following the separation principle of microservice architecture.
+### Databases
 
-### Database Responsibilities
+```text
+micro_user_db
+micro_product_db
+micro_order_db
+```
 
-| Service              | Database Responsibility     |
-| -------------------- | --------------------------- |
-| User Service         | User information            |
-| Product Service      | Product information         |
-| Order Service        | Order information           |
-| Admin Service        | Administration-related data |
-| Distribution Service | Distribution/delivery data  |
+Spring Data JPA is used for database interaction.
 
 ---
 
 # ✨ Key Features
 
-## 👤 User Features
+### 👤 User Features
 
 * User registration
 * User login
-* User authentication
-* User information management
+* Authentication
+* Profile management
 * Product browsing
-* Product selection
-* Shopping workflow
-* Order placement
-* Order management
 
-## 🛍️ Product Features
+### 🛒 Shopping Features
 
 * Product catalog
-* Product browsing
-* Category-based filtering
-* Product information
-* Product management
-
-## 🛒 Shopping Features
-
-* Product selection
-* Shopping cart
-* Cart management
-* Checkout workflow
-* Order creation
-
-## 📦 Order Features
-
+* Category filtering
+* Product details
+* Add to cart
+* Favorites
+* Checkout
 * Order placement
-* Order management
-* User order information
-* Order processing
-* Distribution workflow
 
-## 👨‍💼 Admin Features
+### 📦 Order Features
 
-* Administrative management
+* Order creation
+* Order history
+* Order tracking
+* Delivery status
+
+### 👨‍💼 Admin Features
+
+* Admin dashboard
 * Product management
+* User management
 * Order management
-* Backend management operations
 
-## 🚚 Distribution Features
+### 🚚 Distribution Features
 
+* Delivery dashboard
 * Distribution management
-* Delivery-related operations
-* Order distribution workflow
-
-## 🔎 Microservices Features
-
-* Eureka service discovery
-* API Gateway
-* REST API communication
-* Independent backend services
-* Database integration
+* Delivery status updates
 
 ---
 
 # 🔄 Application Workflow
 
-### Step 1 — User Opens Application
-
-The user accesses the Angular application.
-
 ```text
-Browser
-   ↓
+User
+ │
+ ▼
 Angular Frontend
+ │
+ ▼
+API Gateway
+ │
+ ├──► User Service
+ │
+ ├──► Product Service
+ │
+ ├──► Order Service
+ │
+ ├──► Admin Service
+ │
+ └──► Distribution Service
+          │
+          ▼
+      MySQL Database
 ```
 
-### Step 2 — Registration/Login
-
-The user creates an account or logs in.
+### Shopping Flow
 
 ```text
-Angular
-   ↓
-API Gateway
-   ↓
-User Service
-   ↓
-MySQL
+Register / Login
+       ↓
+Browse Products
+       ↓
+View Product Details
+       ↓
+Add to Cart / Favorites
+       ↓
+Checkout
+       ↓
+Place Order
+       ↓
+Order Processing
+       ↓
+Distribution
+       ↓
+Delivery
 ```
-
-### Step 3 — Browse Products
-
-Products are retrieved from the Product Service.
-
-```text
-Angular
-   ↓
-API Gateway
-   ↓
-Product Service
-   ↓
-MySQL
-```
-
-### Step 4 — Shopping
-
-The user selects products and manages the shopping cart.
-
-### Step 5 — Checkout
-
-The user proceeds through the checkout workflow.
-
-### Step 6 — Order Creation
-
-The order request is sent to the Order Service.
-
-```text
-Angular
-   ↓
-API Gateway
-   ↓
-Order Service
-   ↓
-MySQL
-```
-
-### Step 7 — Distribution
-
-The order is processed through the Distribution Service for delivery-related operations.
-
-### Step 8 — Service Discovery
-
-Eureka maintains information about registered microservices and enables service discovery.
 
 ---
 
@@ -394,150 +346,77 @@ Eureka maintains information about registered microservices and enables service 
 ECommerce/
 │
 ├── admin-service/
-│   ├── src/
-│   ├── pom.xml
-│   └── mvnw
 │
 ├── api-gateway/
-│   ├── src/
-│   ├── pom.xml
-│   └── mvnw
 │
 ├── distribution-service/
-│   ├── src/
-│   ├── pom.xml
-│   └── mvnw
 │
 ├── ecommerce-frontend/
-│   ├── public/
-│   ├── src/
-│   ├── angular.json
-│   ├── package.json
-│   └── tsconfig.json
 │
 ├── eureka-server/
-│   ├── src/
-│   ├── pom.xml
-│   └── mvnw
 │
 ├── order-service/
-│   ├── src/
-│   ├── pom.xml
-│   └── mvnw
 │
 ├── product-service/
-│   ├── src/
-│   ├── pom.xml
-│   └── mvnw
 │
 ├── user-service/
-│   ├── src/
-│   ├── pom.xml
-│   └── mvnw
+│
+├── screenshots/
+│   ├── home.png
+│   ├── login.png
+│   ├── products.png
+│   ├── favorites.png
+│   ├── cart.png
+│   ├── checkout.png
+│   ├── orders.png
+│   ├── delivery-dashboard.png
+│   └── admin-dashboard.png
 │
 └── README.md
 ```
-
-The repository currently contains these eight main project folders/modules, including the Angular frontend and seven backend/infrastructure modules.
 
 ---
 
 # 🛠️ Technologies Used
 
-### Frontend
-
-```text
-Angular
-TypeScript
-HTML5
-CSS3
-Angular CLI
-```
-
-### Backend
-
-```text
-Java
-Spring Boot
-Spring Cloud
-Spring Data JPA
-REST APIs
-```
-
-### Microservices
-
-```text
-Spring Cloud
-Eureka Service Discovery
-API Gateway
-```
-
-### Database
-
-```text
-MySQL
-```
-
-### Build Tools
-
-```text
-Maven
-npm
-Angular CLI
-```
-
-### Version Control
-
-```text
-Git
-GitHub
-```
-
-### Development Tools
-
-```text
-Visual Studio Code
-IntelliJ IDEA / Eclipse
-MySQL
-MySQL Workbench
-Postman
-```
+| Category          | Technologies                     |
+| ----------------- | -------------------------------- |
+| Frontend          | Angular, TypeScript, HTML5, CSS3 |
+| Backend           | Java, Spring Boot                |
+| Architecture      | Microservices                    |
+| API               | REST APIs                        |
+| Service Discovery | Eureka                           |
+| Gateway           | Spring Cloud Gateway             |
+| Database          | MySQL                            |
+| ORM               | Spring Data JPA                  |
+| Build Tool        | Maven                            |
+| Version Control   | Git, GitHub                      |
+| Containerization  | Docker                           |
 
 ---
 
 # 📋 Prerequisites
 
-Before running the project, install:
+Make sure the following are installed:
 
-* Java JDK 21
+* Java 21
 * Node.js
 * npm
 * Angular CLI
 * MySQL
 * Maven
 * Git
-
-Check installed versions:
-
-```bash
-java -version
-node -v
-npm -v
-mvn -version
-git --version
-```
+* IDE such as VS Code / IntelliJ IDEA / Eclipse
 
 ---
 
-# 🚀 Installation & Setup
+# ⚙️ Installation & Setup
 
-## 1. Clone the Repository
+## 1️⃣ Clone the Repository
 
 ```bash
 git clone https://github.com/BALAMURUGAN-4735/ECommerce.git
 ```
-
-Move into the project:
 
 ```bash
 cd ECommerce
@@ -545,11 +424,9 @@ cd ECommerce
 
 ---
 
-# 🗄️ 2. Configure MySQL
+# 🗄️ 2️⃣ Configure MySQL
 
-Start MySQL and create the required databases according to the configuration files of each service.
-
-Example:
+Create the required databases:
 
 ```sql
 CREATE DATABASE micro_user_db;
@@ -557,13 +434,13 @@ CREATE DATABASE micro_product_db;
 CREATE DATABASE micro_order_db;
 ```
 
-> Database names, usernames, passwords, and ports should match the `application.properties` / `application.yml` configuration of each service.
+Update the MySQL username, password, and database configuration in the respective Spring Boot `application.properties` files.
 
 ---
 
-# 🔎 3. Start Eureka Server
+# ▶️ 3️⃣ Start Eureka Server
 
-Navigate to the Eureka Server:
+Navigate to:
 
 ```bash
 cd eureka-server
@@ -575,62 +452,54 @@ Run:
 mvn spring-boot:run
 ```
 
-Or on Windows:
-
-```bash
-mvnw.cmd spring-boot:run
-```
-
-Eureka provides the service discovery mechanism for the microservices.
-
 ---
 
-# 👤 4. Start User Service
+# ▶️ 4️⃣ Start User Service
 
 ```bash
 cd user-service
 mvn spring-boot:run
 ```
 
-Windows:
+User Service:
 
-```bash
-mvnw.cmd spring-boot:run
+```text
+http://localhost:8085
 ```
 
 ---
 
-# 📦 5. Start Product Service
+# ▶️ 5️⃣ Start Product Service
 
 ```bash
 cd product-service
 mvn spring-boot:run
 ```
 
-Windows:
+Product Service:
 
-```bash
-mvnw.cmd spring-boot:run
+```text
+http://localhost:8081
 ```
 
 ---
 
-# 🛒 6. Start Order Service
+# ▶️ 6️⃣ Start Order Service
 
 ```bash
 cd order-service
 mvn spring-boot:run
 ```
 
-Windows:
+Order Service:
 
-```bash
-mvnw.cmd spring-boot:run
+```text
+http://localhost:8082
 ```
 
 ---
 
-# 👨‍💼 7. Start Admin Service
+# ▶️ 7️⃣ Start Admin Service
 
 ```bash
 cd admin-service
@@ -639,7 +508,7 @@ mvn spring-boot:run
 
 ---
 
-# 🚚 8. Start Distribution Service
+# ▶️ 8️⃣ Start Distribution Service
 
 ```bash
 cd distribution-service
@@ -648,18 +517,22 @@ mvn spring-boot:run
 
 ---
 
-# 🌐 9. Start API Gateway
+# ▶️ 9️⃣ Start API Gateway
 
 ```bash
 cd api-gateway
 mvn spring-boot:run
 ```
 
-The API Gateway acts as the main backend entry point for the frontend.
+API Gateway:
+
+```text
+http://localhost:8080
+```
 
 ---
 
-# 💻 10. Start Angular Frontend
+# ▶️ 🔟 Start Angular Frontend
 
 Navigate to:
 
@@ -673,133 +546,132 @@ Install dependencies:
 npm install
 ```
 
-Start the Angular development server:
+Start Angular:
 
 ```bash
 ng serve
 ```
 
-Then open:
+Open:
 
 ```text
-http://localhost:4200/
+http://localhost:4200
 ```
-
-The frontend repository configuration confirms Angular CLI development through `ng serve`, with the application served at `localhost:4200`.
 
 ---
 
-# 🔌 Service Communication
-
-The general communication flow is:
+# 🔗 Service Communication
 
 ```text
-                 ┌─────────────────┐
-                 │ Angular Client  │
-                 └────────┬────────┘
-                          │
-                          ▼
-                 ┌─────────────────┐
-                 │  API Gateway    │
-                 └────────┬────────┘
-                          │
-          ┌───────────────┼────────────────┐
-          │               │                │
-          ▼               ▼                ▼
-    User Service    Product Service   Order Service
-          │               │                │
-          └───────────────┼────────────────┘
-                          │
-                          ▼
-                    Eureka Server
-                          │
-                          ▼
-                    Service Discovery
+Angular
+   │
+   ▼
+API Gateway
+   │
+   ├── User Service
+   ├── Product Service
+   ├── Order Service
+   ├── Admin Service
+   └── Distribution Service
+             │
+             ▼
+        MySQL Databases
 ```
+
+Eureka Service Discovery helps the microservices locate and communicate with each other.
 
 ---
 
 # 🔐 Security & Configuration
 
-Sensitive configuration such as:
+The application separates frontend and backend responsibilities and uses service-level configuration for:
 
-* Database passwords
-* API credentials
-* Production URLs
-* Secret keys
+* Database connection
+* Service ports
+* Eureka registration
+* API Gateway routing
+* REST API communication
 
-should not be committed to GitHub.
-
-Use environment variables or local configuration files for sensitive information.
-
-Example:
-
-```properties
-spring.datasource.username=${DB_USERNAME}
-spring.datasource.password=${DB_PASSWORD}
-```
+Sensitive credentials such as database passwords should be stored securely and should **not** be committed to GitHub.
 
 ---
 
-# 🧪 Testing
+# 🧪 Testing & Build
 
-Backend services can be tested using tools such as:
-
-* Postman
-* Browser REST clients
-* Angular frontend
-
-Example REST API testing flow:
-
-```text
-Postman
-   ↓
-API Gateway
-   ↓
-Microservice
-   ↓
-MySQL
-```
-
-The Angular project also includes standard Angular build and test commands such as:
+Build individual Spring Boot services using:
 
 ```bash
-ng build
-ng test
+mvn clean install
 ```
 
-The frontend repository's existing Angular README documents these commands.
+Run tests using:
 
----
+```bash
+mvn test
+```
 
-# 🏗️ Build the Frontend
-
-To create a production build:
+Build the Angular application:
 
 ```bash
 ng build
 ```
 
-The generated build files are placed in the Angular `dist/` directory.
+---
+
+# 📸 Application Screenshots
+
+## 🏠 Home Page
+
+![Home Page](screenshots/home.png)
+
+## 🔐 Login Page
+
+![Login Page](screenshots/login.png)
+
+## 🛍️ Product Catalog
+
+![Products](screenshots/products.png)
+
+## ❤️ Favorites
+
+![Favorites](screenshots/favorites.png)
+
+## 🛒 Shopping Cart
+
+![Cart](screenshots/cart.png)
+
+## 💳 Checkout
+
+![Checkout](screenshots/checkout.png)
+
+## 📦 Orders
+
+![Orders](screenshots/orders.png)
+
+## 🚚 Delivery Dashboard
+
+![Delivery Dashboard](screenshots/delivery-dashboard.png)
+
+## 👨‍💼 Admin Dashboard
+
+![Admin Dashboard](screenshots/admin-dashboard.png)
 
 ---
 
 # 📊 Project Highlights
 
-| Area                 | Implementation           |
-| -------------------- | ------------------------ |
-| Frontend             | Angular                  |
-| Programming Language | Java, TypeScript         |
-| Backend              | Spring Boot              |
-| Architecture         | Microservices            |
-| API                  | REST APIs                |
-| Gateway              | Spring Cloud API Gateway |
-| Discovery            | Eureka                   |
-| Database             | MySQL                    |
-| ORM                  | Spring Data JPA          |
-| Build Tool           | Maven / npm              |
-| Version Control      | Git & GitHub             |
-| UI                   | Responsive Angular UI    |
+| Feature           | Implementation  |
+| ----------------- | --------------- |
+| Frontend          | Angular         |
+| Backend           | Spring Boot     |
+| Architecture      | Microservices   |
+| API Communication | REST APIs       |
+| Service Discovery | Eureka          |
+| API Routing       | API Gateway     |
+| Database          | MySQL           |
+| ORM               | Spring Data JPA |
+| Build             | Maven           |
+| Version Control   | Git & GitHub    |
 
 ---
 
@@ -807,59 +679,54 @@ The generated build files are placed in the Angular `dist/` directory.
 
 This project was developed as part of my internship at:
 
-**JD Software Pvt. Ltd**
+### **JD Software Pvt. Ltd.**
+
 📍 Kolapakkam, Chennai
 
-### Project
+### Internship Focus
 
-**Full-Stack E-Commerce Platform**
+**Full-Stack Web Development & Microservices**
 
-### Learning Areas
+During the internship, I worked on frontend development, backend microservices, REST API integration, database connectivity, service discovery, API Gateway configuration, testing, debugging, and Git/GitHub version control.
+
+---
+
+# 👨‍💻 My Contributions
+
+* Developed Angular frontend modules.
+* Created and integrated Spring Boot microservices.
+* Implemented REST API communication.
+* Integrated Angular with backend APIs.
+* Configured MySQL database connectivity.
+* Implemented Spring Data JPA.
+* Worked with Eureka Service Discovery.
+* Configured API Gateway.
+* Developed e-commerce workflows.
+* Worked on admin and distribution modules.
+* Tested and debugged application issues.
+* Managed source code using Git and GitHub.
+
+---
+
+# 📚 Learning Outcomes
 
 Through this project, I gained practical experience in:
 
-* Full-stack application development
-* Angular development
+* Angular
 * TypeScript
 * Java
 * Spring Boot
 * Spring Cloud
-* Microservices architecture
-* REST API development
+* Microservices Architecture
+* REST API Development
+* Spring Data JPA
+* MySQL
 * API Gateway
 * Eureka Service Discovery
-* MySQL database integration
-* JPA
 * Maven
-* Git and GitHub
-* Debugging and testing
-* Application deployment
-
----
-
-# 💡 Key Learning Outcomes
-
-This project helped me understand how a real-world application can be divided into independent services.
-
-I gained practical knowledge of:
-
-```text
-Frontend Development
-        ↓
-REST API Integration
-        ↓
-Microservices
-        ↓
-Service Discovery
-        ↓
-API Gateway
-        ↓
-Database Integration
-        ↓
-Testing & Debugging
-        ↓
-Deployment
-```
+* Git & GitHub
+* Full-Stack Application Development
+* Debugging and Testing
 
 ---
 
@@ -867,89 +734,37 @@ Deployment
 
 Possible future improvements include:
 
+* Online payment gateway integration
 * JWT-based authentication
-* Role-based authorization
-* Online payment gateway
+* Advanced product search
 * Product reviews and ratings
-* Wishlist
-* Advanced search
 * Email notifications
-* Order tracking
-* Docker containerization
-* Docker Compose
-* CI/CD pipeline
+* Real-time order tracking
+* Docker-based deployment
 * Cloud deployment
-* Centralized logging
-* Monitoring and health checks
 * Redis caching
-* Improved security
+* CI/CD pipeline
+* Advanced analytics dashboard
 
 ---
 
-# 📸 Screenshots
+# 👤 Developer
 
-Add project screenshots here to make the GitHub repository more professional.
+### **Balamurugan M**
 
-Example:
+**Computer Science Engineering Student | Full-Stack Developer**
 
-```markdown
-## 🖥️ Application Screenshots
-
-### Home Page
-![Home Page](screenshots/home.png)
-
-### Product Page
-![Product Page](screenshots/products.png)
-
-### Login Page
-![Login Page](screenshots/login.png)
-
-### Cart
-![Cart](screenshots/cart.png)
-
-### Checkout
-![Checkout](screenshots/checkout.png)
-
-### Admin Dashboard
-![Admin Dashboard](screenshots/admin-dashboard.png)
-```
-
-Recommended folder:
-
-```text
-screenshots/
-├── home.png
-├── login.png
-├── products.png
-├── product-details.png
-├── cart.png
-├── checkout.png
-├── orders.png
-└── admin-dashboard.png
-```
-
----
-
-# 👨‍💻 Developer
-
-**Balamurugan M**
-
-Computer Science Engineering Student
-Full-Stack Developer | Angular | Java | Spring Boot | Microservices
-
-### GitHub
-
+GitHub:
 https://github.com/BALAMURUGAN-4735
 
-### Project Repository
-
+Project Repository:
 https://github.com/BALAMURUGAN-4735/ECommerce
 
 ---
 
 # 🙏 Acknowledgement
 
-I would like to sincerely thank **JD Software Pvt. Ltd, Kolapakkam, Chennai**, for providing me with the opportunity to work on this project and gain valuable practical experience in full-stack development and microservices architecture.
+I would like to express my sincere gratitude to **JD Software Pvt. Ltd., Kolapakkam, Chennai**, for providing me with the opportunity to work on this project and gain valuable practical experience.
 
 Special thanks to:
 
@@ -957,30 +772,20 @@ Special thanks to:
 * **Manager:** Arun Balaji
 * **HR Team:** Jaya prakash
 
-for their guidance, support, and encouragement throughout the internship.
+Their guidance and support helped me improve my technical knowledge and understand real-world software development practices.
 
 ---
 
-# ⭐ Conclusion
+# 🏁 Conclusion
 
-The **Full-Stack E-Commerce Platform** demonstrates the implementation of a modern web application using **Angular and Spring Boot Microservices**.
+The **Full-Stack E-Commerce Platform** provided valuable hands-on experience in developing a real-world application using modern frontend, backend, database, and microservices technologies.
 
-The project combines:
-
-**Angular + Spring Boot + Microservices + REST APIs + API Gateway + Eureka + MySQL**
-
-to create a scalable and maintainable e-commerce application.
-
-This project provided valuable hands-on experience in designing, developing, integrating, testing, and deploying a real-world full-stack software system.
+The project helped me understand how independent services communicate through REST APIs, how service discovery and API Gateway work together, and how a complete e-commerce workflow can be implemented using a scalable architecture.
 
 ---
 
-## 📜 License
+## ⭐ Support
 
-This project was developed as an internship project for educational and professional learning purposes.
+If you find this project useful or interesting, consider giving the repository a ⭐ on GitHub.
 
----
-
-## ⭐ If you find this project useful
-
-Consider giving the repository a ⭐ on GitHub.
+**Thank you for visiting this project!**
